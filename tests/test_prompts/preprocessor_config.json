@@ -1,0 +1,13 @@
+{
+  "do_strip": true,
+  "check_empty": true,
+  "check_letters": true,
+  "percentage_letters": 0.85,
+  "do_truncate": true,
+  "max_length": 10,
+  "min_length": 2,
+  "spaces_only": true,
+  "max_consecutive_spaces": 1,
+  "ascii_only": false,
+  "unicode_normalize": ""
+}
