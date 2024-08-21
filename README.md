@@ -2,13 +2,17 @@
 
 *wtPrompt*: a lightweight, no-nonsense library for managing your LLM prompts.
 
-Tired of cluttering your code with blocks of text? *wtPrompt* lets you keep your code clean by loading prompts from text files. Say goodbye to length issues and linting headaches.
+Tired of cluttering your code with blocks of text? *wtPrompt* lets you keep your code clean by loading prompts
+from text files. Say goodbye to length issues and linting headaches.
 
-Features:
+## Why wtPrompt?
 
-- ✅ Easily load prompts from a directory or json
-- ✅ Insert text inside your prompt at runtime
-- ✅ Readily available, basic preprocessing for the inserted text
+- ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
+- ✅ **Haystack-inspired syntax**: Leverage an already established syntax for streamlined prompt management
+- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtPrompt* is ready for that!
+- ✅ **Easy Prompt Managament**: Instantly load prompts from a directory or JSON file
+- ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
+- ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text
 
 ### Folder-Based Prompt Loading
 
@@ -21,9 +25,9 @@ from wtPrompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
-# Now the following will return your prompt in .str format
-my_prompts.prompt_name
-my_prompts('prompt_name')
+# Now the following will return your prompt as a str variable
+prompt = my_prompts.prompt_name
+prompt = my_prompts('prompt_name')
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
