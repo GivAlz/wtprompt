@@ -7,8 +7,8 @@ Tired of cluttering your code with blocks of text? wtPrompt lets you keep your c
 Features:
 
 - [X] Loads prompts from a directory or json
-- [ ] Preprocess text
-- [ ] Manage and collate complex prompts
+- [ ] Insert text inside your prompt
+- [X] Preprocess the inserted text
 
 ## How to Use
 

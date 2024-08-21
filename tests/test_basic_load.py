@@ -3,7 +3,7 @@ import unittest
 from wtPrompt.core import FolderPrompts, JsonPrompts
 
 
-class TestBase(unittest.TestCase):
+class TestBasePrompts(unittest.TestCase):
 
     def test_folder_prompts(self):
         base_prompts = FolderPrompts(prompt_folder='test_prompts')

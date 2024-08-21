@@ -22,7 +22,13 @@ class BasePrompts(BaseModel):
     def load(self):
         pass
 
-    def _get(self, name: str) -> str:
+    def get_prompt_list(self):
+        return self.prompts
+
+    def add_prompt(self, prompt_name:str, prompt_text: str):
+        self.prompts[prompt_name] = prompt_text
+
+    def _get_prompt(self, name: str) -> str:
         """Gets a prompt; internal function.
         """
         if name in self.prompts:
@@ -41,7 +47,7 @@ class BasePrompts(BaseModel):
 
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
-        return self._get(name)
+        return self._get_prompt(name)
 
     def __call__(self, name: str) -> Optional[str]:
         """Access prompt content via function-call-style access.
@@ -55,7 +61,7 @@ class BasePrompts(BaseModel):
 
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
-        return self._get(name)
+        return self._get_prompt(name)
 
 
 class FolderPrompts(BasePrompts):
