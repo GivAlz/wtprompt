@@ -1,42 +1,15 @@
-import re
-import unicodedata
+import json
+
 from typing import Tuple
 from pydantic import BaseModel, field_validator, model_validator
 
+from wtPrompt.utils.basic_operations import do_strip, check_empty, spaces_only, max_consecutive_spaces, text_truncate, \
+    ascii_only, text_normalize, check_letters, has_min_length
 
-class TextPreprocessor(BaseModel):
-    """
-    TextPreprocessor
-    ---------------
 
-    Basic text preprocessing and validation class.
-
-    Parameters:
-        do_strip (bool): If True calls the function .strip() on the string
-        check_empty (bool): If True, the preprocessor will return False and an empty string if
-            the input text is empty (after stripping whitespace).
-        check_letters (bool): If True, the preprocessor will check if the percentage of letters in the text is at
-            least `percentage_letters`. If not, it will return False and the original text.
-        percentage_letters (float): The minimum percentage of letters required in the text if `check_letters` is True. Must be between 0 and 1.
-        truncate (bool): If True, the preprocessor will truncate the text to the `max_length` if it exceeds that length.
-        max_length (int): The maximum length of the text after preprocessing. If set to -1, there is no maximum length.
-        min_length (int): The minimum length of the text after preprocessing. If set to -1, there is no minimum length.
-        spaces_only (bool): If True, the preprocessor will replace all whitespace characters with a single space.
-        max_consecutive_spaces (int): The maximum number of consecutive spaces allowed in the text.
-            If set to 1, the preprocessor will replace all consecutive spaces with a single space.
-        ascii_only (bool): If True, the preprocessor will keep only ASCII characters in the text.
-        normalize (str): The Unicode normalization form to apply to the text, e.g., 'NFC' or 'NFD'.
-            See the `unicodedata.normalize()` documentation for valid options.
-
-    Raises:
-        ValueError: If any of the input parameters are invalid.
-
-    Returns:
-        Tuple[bool, str]: A tuple where the first element is a boolean indicating whether the preprocessing
-        was successful, and the second element is the preprocessed text.
-    """
+class TextPreprocessorValidator(BaseModel):
     do_strip: bool = True
-    check_empty: bool = False
+    check_empty: bool = True
     check_letters: bool = False
     percentage_letters: float = 0.8
     truncate: bool = False
@@ -72,40 +45,106 @@ class TextPreprocessor(BaseModel):
         return v
 
     @model_validator(mode='after')
-    def check_max_min_length(cls, self):
-        if self.max_length < self.min_length and not (self.max_length == -1 or self.min_length == -1):
+    def check_max_min_length(cls, values):
+        max_length = values.get('max_length')
+        min_length = values.get('min_length')
+        if max_length < min_length and not (max_length == -1 or min_length == -1):
             raise ValueError('max_length must be greater than or equal to min_length')
+        return values
+
+class TextPreprocessor:
+    """
+    TextPreprocessor
+    ---------------
+
+    Basic text preprocessing and validation class.
+
+    Parameters:
+        do_strip (bool): If True calls the function .strip() on the string
+        check_empty (bool): If True, the preprocessor will return False and an empty string if
+            the input text is empty (after stripping whitespace).
+        check_letters (bool): If True, the preprocessor will check if the percentage of letters in the text is at
+            least `percentage_letters`. If not, it will return False and the original text.
+        percentage_letters (float): The minimum percentage of letters required in the text if `check_letters` is True. Must be between 0 and 1.
+        truncate (bool): If True, the preprocessor will truncate the text to the `max_length` if it exceeds that length.
+        max_length (int): The maximum length of the text after preprocessing. If set to -1, there is no maximum length.
+        min_length (int): The minimum length of the text after preprocessing. If set to -1, there is no minimum length.
+        spaces_only (bool): If True, the preprocessor will replace all whitespace characters with a single space.
+        max_consecutive_spaces (int): The maximum number of consecutive spaces allowed in the text.
+            If set to 1, the preprocessor will replace all consecutive spaces with a single space.
+        ascii_only (bool): If True, the preprocessor will keep only ASCII characters in the text.
+        normalize (str): The Unicode normalization form to apply to the text, e.g., 'NFC' or 'NFD'.
+            See the `unicodedata.normalize()` documentation for valid options.
+
+    Raises:
+        ValueError: If any of the input parameters are invalid.
+
+    Returns:
+        Tuple[bool, str]: A tuple where the first element is a boolean indicating whether the preprocessing
+        was successful, and the second element is the preprocessed text.
+    """
+    def __init__(self, **kwargs):
+        self.settings = TextPreprocessorValidator(**kwargs)
+        self.preprocessing_pipeline = self.setup_pipeline()
+        if not self.preprocessing_pipeline:
+            raise ValueError("Preprocessing pipeline is empty. Please configure at least one preprocessing step.")
+
+    @staticmethod
+    def load_from_json(json_file: str) -> 'TextPreprocessor':
+        with open(json_file, 'r') as f:
+            params = json.load(f)
+
+        return TextPreprocessor(**params)
+
+    def setup_pipeline(self):
+        preprocessing_pipeline = []
+        if self.settings.do_strip:
+            preprocessing_pipeline.append(do_strip)
+
+        if self.settings.check_empty:
+            preprocessing_pipeline.append(check_empty)
+
+        if self.settings.spaces_only:
+            preprocessing_pipeline.append(spaces_only)
+
+        if self.settings.max_consecutive_spaces > 0:
+            preprocessing_pipeline.append(
+                lambda text: max_consecutive_spaces(text, self.settings.max_consecutive_spaces))
+
+        if self.settings.truncate and -1 < self.settings.max_length:
+            preprocessing_pipeline.append(lambda text: text_truncate(text, self.settings.max_length))
+
+        if self.settings.ascii_only:
+            preprocessing_pipeline.append(ascii_only)
+
+        if self.settings.normalize:
+            preprocessing_pipeline.append(lambda text: text_normalize(text, self.settings.normalize))
+
+        if self.settings.check_letters:
+            preprocessing_pipeline.append(lambda text: check_letters(text, self.settings.percentage_letters))
+
+        if self.settings.min_length > -1:
+            preprocessing_pipeline.append(lambda text: has_min_length(text, self.settings.min_length))
+
+        return preprocessing_pipeline
+
+    def get_preprocessing_pipeline(self):
+        """Getting the pipeline which can then be modified.
+        """
+        return self.preprocessing_pipeline
+
+    def update_preprocessing_pipeline(self):
+        """Saving directly the preprocessing pipeline.
+
+        Do this at your own risk.
+        """
+        return self.preprocessing_pipeline
 
     def preprocess(self, text: str) -> Tuple[bool, str]:
+        is_ok = True
+        for prep_f in self.preprocessing_pipeline:
+            is_ok, text = prep_f(text)
+            if not is_ok:
+                break
+        return is_ok, text
 
-        if self.do_strip:
-            text = text.strip()
-
-        if self.check_empty and not text:
-            return False, text
-
-        if self.spaces_only:
-            text = re.sub(r'\s', ' ', text)
-
-        if self.max_consecutive_spaces > 1:
-            text = re.sub(rf'\s{{{self.max_consecutive_spaces+1},}}', ' ' * self.max_consecutive_spaces, text)
-
-        if self.truncate and -1 < self.max_length < len(text):
-            text = text[:self.max_length]
-
-        if self.ascii_only:
-            text = text.encode('ascii', 'ignore').decode('ascii')
-
-        if self.normalize:
-            text = unicodedata.normalize(self.normalize, text)
-
-        if self.check_letters:
-            letters = sum(c.isalpha() for c in text)
-            total_chars = len(text)
-            if total_chars == 0 or letters / total_chars < self.percentage_chars:
-                return False, text
-
-        if self.min_length > -1 and len(text) < self.min_length:
-            return False, text
-
-        return True, text
