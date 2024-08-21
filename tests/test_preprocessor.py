@@ -1,7 +1,5 @@
 import unittest
 
-from jinja2.filters import do_truncate
-
 from wtPrompt.utils.preprocessor import TextPreprocessor
 
 
@@ -22,4 +20,3 @@ class TestBase(unittest.TestCase):
     def test_preprocessor_inline(self):
         preprocessor = TextPreprocessor(do_truncate=True, max_length=10)
         self.assertEqual(preprocessor.preprocess("abcdefghilmn hola"), (True, "abcdefghil"))
-        

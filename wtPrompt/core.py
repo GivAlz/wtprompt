@@ -1,9 +1,10 @@
 import json
 import os
+import re
 import warnings
 from abc import abstractmethod
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
@@ -63,6 +64,59 @@ class BasePrompts(BaseModel):
         """
         return self._get_prompt(name)
 
+    def fill(self, prompt_name: str, fillers) -> str:
+        """Fill a prompt.
+
+        The prompt should be formatted in the following way:
+
+            This is a prompt {{key_1}}.
+
+        Passing the prompt_name together with a dictionary {'key_1': 'value'}, this method will
+        substitute key_1 with the value.
+
+        If {{key_1}} appears multiple times, it will substitute it multiple times.
+
+        REMARK: the name for the keys can contain only the chars matched by the regex: [a-zA-z0-9_]
+
+        :param prompt_name: Name of the prompt
+        :param fillers: Dictionary with arguments to be used to fill the prompt
+        :return: prompt text with the substituted key/values.
+        """
+        filled_prompt = self.prompts[prompt_name]
+        # Find all the placeholders in the prompt text
+        placeholders = re.findall(r'\{\{(.[a-zA-Z0-9_]+?)?}\}', filled_prompt)
+
+        # Substitute the placeholders
+        for placeholder in placeholders:
+            if placeholder in fillers:
+                filled_prompt = filled_prompt.replace('{{%s}}' % placeholder, str(fillers[placeholder]))
+            else:
+                warnings.showwarning(f"Warning: {placeholder} not found in prompt!\n"
+                                     f"It can't be substituted: please check your prompt or input!", Warning)
+        return filled_prompt
+
+
+    def fill_list(self, prompt_name: str, values: List[str]) -> str:
+        """Fill a prompt.
+
+        Similar to the fill method, the main difference is that it substitutes the place orders, which can be the same
+        ones used in the fill method or even {{}} in order.
+
+        It expects to find the same number of placeholders and values.
+        """
+        filled_prompt = self.prompts[prompt_name]
+        placeholders = re.findall(r'\{\{(.[a-zA-Z0-9_]*?)?}\}', filled_prompt)
+
+        if len(values) != len(placeholders):
+            warnings.showwarning(f"Using {len(values)} values to fill {len(placeholders)} placeholders:"
+                                 "These should have the same length!\nPlease check your prompt or input!", Warning)
+        for i, placeholder in enumerate(placeholders):
+            if i < len(values):
+                filled_prompt = filled_prompt.replace('{{%s}}' % placeholder, str(values[i]))
+            else:
+                break
+
+        return filled_prompt
 
 class FolderPrompts(BasePrompts):
     """Load prompts from a folder.
