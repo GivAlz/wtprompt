@@ -48,3 +48,4 @@ This can be used in a similar fashion:
     my_prompts.prompt_name
     my_prompts('prompt_name')
 
+Note: the JSON will be validated
