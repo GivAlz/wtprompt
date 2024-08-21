@@ -1,2 +1,5 @@
-# wtPrompt
-Simple library to manage your LLM prompts
+# 🤌 wtPrompt
+
+Manage your LLM prompts, the easy way.
+
+
