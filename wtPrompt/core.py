@@ -1,21 +1,16 @@
+import json
 import os
 import warnings
+from abc import abstractmethod
 
 from typing import Dict, Optional
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
 class BasePrompts(BaseModel):
-    """Base class to load prompts.
-
-    Usage:
-
-        prompts = Prompts(folder="/path/to/folder")
-
-
+    """Abstract class to manage prompts.
 
     """
-    prompt_folder: str = Field(..., description="The folder containing .txt and .md files.")
     prompts: Dict[str, str] = Field(default_factory=dict, description="Dictionary to store file contents.")
 
     def __init__(self, **data):
@@ -23,26 +18,9 @@ class BasePrompts(BaseModel):
         super().__init__(**data)
         self.load()
 
-    @field_validator('prompt_folder')
-    def validate_folder(cls, dirname):
-        if not os.path.isdir(dirname):
-            raise ValidationError(f"The provided path '{dirname}' is not a valid directory.")
-        return dirname
-
+    @abstractmethod
     def load(self):
-        """Loads .txt and .md files from the folder into the prompts dictionary."""
-        for file_name in os.listdir(self.prompt_folder):
-            if file_name.endswith('.txt') or file_name.endswith('.md'):
-                file_path = os.path.join(self.prompt_folder, file_name)
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    prompt_name = os.path.splitext(file_name)[0]
-                    if prompt_name in self.prompts:
-                        warnings.showwarning(f"Prompt {prompt_name} already present.\n"
-                                             f"You likely have two files with the name {prompt_name} and "
-                                             f"different extensions.\nPlease either remove one of the files "
-                                             f"or change one file's name", Warning)
-                        continue
-                    self.prompts[prompt_name] = file.read()
+        pass
 
     def _get(self, name: str) -> str:
         """Gets a prompt; internal function.
@@ -78,3 +56,74 @@ class BasePrompts(BaseModel):
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
         return self._get(name)
+
+
+class FolderPrompts(BasePrompts):
+    """Load prompts from a folder.
+
+    Usage:
+
+        prompts = FolderPrompts(prompt_folder="/path/to/folder")
+
+    where the folder contains .txt and .md files
+    """
+    prompt_folder: str = Field(..., description="The folder containing .txt and .md files.")
+
+    @field_validator('prompt_folder')
+    def validate_folder(cls, dirname):
+        if not os.path.isdir(dirname):
+            raise ValidationError(f"The provided path '{dirname}' is not a valid directory.")
+        return dirname
+
+    def load(self):
+        """Loads .txt and .md files from the folder into the prompts dictionary."""
+        for file_name in os.listdir(self.prompt_folder):
+            if file_name.endswith('.txt') or file_name.endswith('.md'):
+                file_path = os.path.join(self.prompt_folder, file_name)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    prompt_name = os.path.splitext(file_name)[0]
+                    if prompt_name in self.prompts:
+                        warnings.showwarning(f"Prompt {prompt_name} already present.\n"
+                                             f"You likely have two files with the name {prompt_name} and "
+                                             f"different extensions.\nPlease either remove one of the files "
+                                             f"or change one file's name", Warning)
+                        continue
+                    self.prompts[prompt_name] = file.read()
+
+class JsonPrompts(BasePrompts):
+    """Load prompts from a json file.
+
+    Usage:
+
+        prompts = JsonPrompts(prompt_file="/path/to/prompts.json")
+
+    The json should contain a dictionary of the kind: {'prompt name': 'prompt text'}
+    """
+    prompt_file: str = Field(..., description="The .json file containing the prompts.")
+
+    @field_validator('prompt_file')
+    def validate_json(cls, prompt_file):
+        # Validating if the file exists, it is a valid json, the content is a dictionary
+        if not os.path.isfile(prompt_file):
+            raise ValidationError(f"The provided path '{prompt_file}' is not a valid file.")
+
+        # Load and validate JSON content
+        with open(prompt_file, 'r', encoding='utf-8') as file:
+            try:
+                content = json.load(file)
+            except json.JSONDecodeError as e:
+                raise ValidationError(f"Error decoding JSON file {prompt_file}: {e}")
+
+        # Validate that the content is a dictionary with string keys and values
+        if not isinstance(content, dict):
+            raise ValidationError(f"The content of the file is not a dictionary.")
+        for key, value in content.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise ValidationError(f"All keys and values in the dictionary must be strings."
+                                      f"Found key: {key}, value: {value}")
+        return prompt_file
+
+    def load(self):
+        """Loads the json into the prompts dictionary."""
+        with open(self.prompt_file, 'r', encoding='utf-8') as file:
+            self.prompts = json.load(file)
