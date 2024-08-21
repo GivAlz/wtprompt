@@ -11,14 +11,21 @@ class TextPreprocessorValidator(BaseModel):
     do_strip: bool = True
     check_empty: bool = True
     check_letters: bool = False
-    percentage_letters: float = 0.8
+    percentage_letters: float = 0.85
     truncate: bool = False
     max_length: int = -1
     min_length: int = -1
     spaces_only: bool = True
-    max_consecutive_spaces: int = 1
+    max_consecutive_spaces: int = 2
     ascii_only: bool = False
-    normalize: str = ''
+    unicode_normalize: str = ''
+
+    @field_validator('unicode_normalize')
+    def validate_unicode_normalize(cls, v):
+        if v not in ['', 'NFC', 'NFKC', 'NFD', 'NFKD']:
+            raise ValueError(
+                f"Invalid normalize form: '{v}'. Valid options are: ['NFC', 'NFKC', 'NFD', 'NFKD']")
+        return v
 
     @field_validator('max_length')
     def max_length_valid(cls, v):
@@ -73,7 +80,7 @@ class TextPreprocessor:
         max_consecutive_spaces (int): The maximum number of consecutive spaces allowed in the text.
             If set to 1, the preprocessor will replace all consecutive spaces with a single space.
         ascii_only (bool): If True, the preprocessor will keep only ASCII characters in the text.
-        normalize (str): The Unicode normalization form to apply to the text, e.g., 'NFC' or 'NFD'.
+        unicode_normalize (str): The Unicode normalization form to apply to the text, e.g., 'NFC' or 'NFD'.
             See the `unicodedata.normalize()` documentation for valid options.
 
     Raises:
@@ -117,8 +124,8 @@ class TextPreprocessor:
         if self.settings.ascii_only:
             preprocessing_pipeline.append(ascii_only)
 
-        if self.settings.normalize:
-            preprocessing_pipeline.append(lambda text: text_normalize(text, self.settings.normalize))
+        if self.settings.unicode_normalize:
+            preprocessing_pipeline.append(lambda text: text_normalize(text, self.settings.unicode_normalize))
 
         if self.settings.check_letters:
             preprocessing_pipeline.append(lambda text: check_letters(text, self.settings.percentage_letters))
