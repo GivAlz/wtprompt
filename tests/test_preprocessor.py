@@ -1,3 +1,5 @@
+import os
+
 from wtPrompt.utils.preprocessor import TextPreprocessor
 
 def test_default_preprocessor():
@@ -6,8 +8,9 @@ def test_default_preprocessor():
     assert preprocessor.preprocess("I wonder how\n\n\nthis works"), (True, 'I wonder how  this works')
     assert preprocessor.preprocess(' '), (False, '')
 
-def test_preprocessor_json():
-    preprocessor = TextPreprocessor.load_from_json('test_prompts/preprocessor_config.json')
+def test_preprocessor_json(test_folder_location):
+    preprocessor = TextPreprocessor.load_from_json(os.path.join(test_folder_location,
+                                                                'test_prompts/preprocessor_config.json'))
     assert preprocessor.preprocess("a"), (False, 'a')
     assert preprocessor.preprocess("abcdefghilmn"), (True, "abcdefghil")
     assert preprocessor.preprocess("ab1237816237816312"), (False, "ab12378162")

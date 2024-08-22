@@ -1,6 +1,7 @@
-import json
+from __future__ import annotations
 
-from typing import Tuple, List, Self
+import json
+from typing import Tuple, List
 from pydantic import Field, BaseModel, field_validator, model_validator
 
 from wtPrompt.utils.basic_operations import (
@@ -123,7 +124,7 @@ class TextPreprocessor(BaseModel):
         return values
 
     @classmethod
-    def load_from_json(cls, json_file: str) -> Self:
+    def load_from_json(cls, json_file: str) -> TextPreprocessor:
         with open(json_file, 'r') as f:
             params = json.load(f)
 

@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 
 from typing import Dict, Optional, List
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class BasePrompts(BaseModel):
@@ -26,7 +26,7 @@ class BasePrompts(BaseModel):
     def get_prompt_list(self):
         return self.prompts
 
-    def add_prompt(self, prompt_name:str, prompt_text: str):
+    def add_prompt(self, prompt_name: str, prompt_text: str):
         if prompt_name in self.prompts:
             warnings.showwarning(f"Prompt {prompt_name} already present.\n"
                                  f"Please check the prompt names!\nAdding nothing.", Warning)
@@ -98,7 +98,6 @@ class BasePrompts(BaseModel):
                                      f"It can't be substituted: please check your prompt or input!", Warning)
         return filled_prompt
 
-
     def fill_list(self, prompt_name: str, values: List[str]) -> str:
         """Fill a prompt.
 
@@ -121,6 +120,7 @@ class BasePrompts(BaseModel):
 
         return filled_prompt
 
+
 class FolderPrompts(BasePrompts):
     """Load prompts from a folder.
 
@@ -135,7 +135,7 @@ class FolderPrompts(BasePrompts):
     @field_validator('prompt_folder')
     def validate_folder(cls, dirname):
         if not os.path.isdir(dirname):
-            raise ValidationError(f"The provided path '{dirname}' is not a valid directory.")
+            raise ValueError(f"The provided path '{dirname}' is not a valid directory.")
         return dirname
 
     def load(self):
@@ -146,6 +146,7 @@ class FolderPrompts(BasePrompts):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     prompt_name = os.path.splitext(file_name)[0]
                     self.add_prompt(prompt_name, file.read())
+
 
 class JsonPrompts(BasePrompts):
     """Load prompts from a json file.
@@ -162,22 +163,22 @@ class JsonPrompts(BasePrompts):
     def validate_json(cls, prompt_file):
         # Validating if the file exists, it is a valid json, the content is a dictionary
         if not os.path.isfile(prompt_file):
-            raise ValidationError(f"The provided path '{prompt_file}' is not a valid file.")
+            raise ValueError(f"The provided path '{prompt_file}' is not a valid file.")
 
         # Load and validate JSON content
         with open(prompt_file, 'r', encoding='utf-8') as file:
             try:
                 content = json.load(file)
             except json.JSONDecodeError as e:
-                raise ValidationError(f"Error decoding JSON file {prompt_file}: {e}")
+                raise ValueError(f"Error decoding JSON file {prompt_file}: {e}")
 
         # Validate that the content is a dictionary with string keys and values
         if not isinstance(content, dict):
-            raise ValidationError("The content of the file is not a dictionary.")
+            raise ValueError("The content of the file is not a dictionary.")
         for key, value in content.items():
             if not isinstance(key, str) or not isinstance(value, str):
-                raise ValidationError(f"All keys and values in the dictionary must be strings."
-                                      f"Found key: {key}, value: {value}")
+                raise ValueError(f"All keys and values in the dictionary must be strings."
+                                 f"Found key: {key}, value: {value}")
         return prompt_file
 
     def load(self):
