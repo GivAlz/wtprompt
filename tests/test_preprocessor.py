@@ -1,22 +1,17 @@
-import unittest
-
 from wtPrompt.utils.preprocessor import TextPreprocessor
 
+def test_default_preprocessor():
+    preprocessor = TextPreprocessor()
+    assert preprocessor.preprocess(" this is a test.    Hello"), (True, 'this is a test.  Hello')
+    assert preprocessor.preprocess("I wonder how\n\n\nthis works"), (True, 'I wonder how  this works')
+    assert preprocessor.preprocess(' '), (False, '')
 
-class TestBase(unittest.TestCase):
+def test_preprocessor_json():
+    preprocessor = TextPreprocessor.load_from_json('test_prompts/preprocessor_config.json')
+    assert preprocessor.preprocess("a"), (False, 'a')
+    assert preprocessor.preprocess("abcdefghilmn"), (True, "abcdefghil")
+    assert preprocessor.preprocess("ab1237816237816312"), (False, "ab12378162")
 
-    def test_default_preprocessor(self):
-        preprocessor = TextPreprocessor()
-        self.assertEqual(preprocessor.preprocess(" this is a test.    Hello"), (True, 'this is a test.  Hello'))
-        self.assertEqual(preprocessor.preprocess("I wonder how\n\n\nthis works"), (True, 'I wonder how  this works'))
-        self.assertEqual(preprocessor.preprocess(' '), (False, ''))
-
-    def test_preprocessor_json(self):
-        preprocessor = TextPreprocessor.load_from_json('test_prompts/preprocessor_config.json')
-        self.assertEqual(preprocessor.preprocess("a"), (False, 'a'))
-        self.assertEqual(preprocessor.preprocess("abcdefghilmn"), (True, "abcdefghil"))
-        self.assertEqual(preprocessor.preprocess("ab1237816237816312"), (False, "ab12378162"))
-
-    def test_preprocessor_inline(self):
-        preprocessor = TextPreprocessor(do_truncate=True, max_length=10)
-        self.assertEqual(preprocessor.preprocess("abcdefghilmn hola"), (True, "abcdefghil"))
+def test_preprocessor_inline():
+    preprocessor = TextPreprocessor(do_truncate=True, max_length=10)
+    assert preprocessor.preprocess("abcdefghilmn hola"), (True, "abcdefghil")

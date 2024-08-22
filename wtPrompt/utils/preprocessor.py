@@ -3,8 +3,17 @@ import json
 from typing import Tuple, List, Self
 from pydantic import Field, BaseModel, field_validator, model_validator
 
-from wtPrompt.utils.basic_operations import do_strip, check_empty, spaces_only, max_consecutive_spaces, text_truncate, \
-    ascii_only, text_normalize, check_letters, has_min_length
+from wtPrompt.utils.basic_operations import (
+    do_strip,
+    check_empty,
+    spaces_only,
+    max_consecutive_spaces,
+    text_truncate,
+    ascii_only,
+    text_normalize,
+    check_letters,
+    has_min_length,
+)
 
 
 class TextPreprocessor(BaseModel):
