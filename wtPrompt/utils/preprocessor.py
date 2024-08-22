@@ -1,7 +1,7 @@
 import json
 
-from typing import Tuple, List
-from pydantic import BaseModel, field_validator, model_validator
+from typing import Tuple, List, Self
+from pydantic import Field, BaseModel, field_validator, model_validator
 
 from wtPrompt.utils.basic_operations import do_strip, check_empty, spaces_only, max_consecutive_spaces, text_truncate, \
     ascii_only, text_normalize, check_letters, has_min_length
@@ -42,23 +42,25 @@ class TextPreprocessor(BaseModel):
     do_strip: bool = True
     check_empty: bool = True
     check_letters: bool = False
-    percentage_letters: float = 0.85
+    percentage_letters: float = Field(0.85, gt=0, le=1, description="Float, a percentage in [0,1]")
     do_truncate: bool = False
     max_length: int = -1
-    min_length: int = -1
+    min_length: int = Field(0, gt=-1, description="For no min_len -1, otherwise a positive integer")
     spaces_only: bool = True
-    max_consecutive_spaces: int = 2
+    max_consecutive_spaces: int = Field(2, gt=-1,
+                                        description="Integer, -1 for no limit on consecutive integer, positive "
+                                                    "for a limit on them.")
     ascii_only: bool = False
     unicode_normalize: str = ''
     preprocessing_pipeline: List = []
 
     def __init__(self, /, **kwargs):
         super().__init__(**kwargs)
-        self.preprocessing_pipeline = self.setup_pipeline()
+        self.preprocessing_pipeline = self.build_pipeline()
         if not self.preprocessing_pipeline:
             raise ValueError("Preprocessing pipeline is empty. Please configure at least one preprocessing step.")
 
-    def setup_pipeline(self):
+    def build_pipeline(self):
         preprocessing_pipeline = []
         if self.do_strip:
             preprocessing_pipeline.append(do_strip)
@@ -103,24 +105,6 @@ class TextPreprocessor(BaseModel):
             raise ValueError('max_length must be -1 or a positive integer')
         return v
 
-    @field_validator('min_length')
-    def min_length_valid(cls, v):
-        if v < -1:
-            raise ValueError('min_length must be -1 or a positive integer')
-        return v
-
-    @field_validator('max_consecutive_spaces')
-    def max_consecutive_spaces_positive(cls, v):
-        if v <= 0:
-            raise ValueError('max_consecutive_spaces must be a positive integer')
-        return v
-
-    @field_validator('percentage_letters')
-    def percentage_chars_valid(cls, v):
-        if v < 0 or v >= 1:
-            raise ValueError('percentage_chars must be between 0 and 1')
-        return v
-
     @model_validator(mode='after')
     def check_max_min_length(cls, values):
         max_length = values.max_length
@@ -129,24 +113,32 @@ class TextPreprocessor(BaseModel):
             raise ValueError('max_length must be greater than or equal to min_length')
         return values
 
-    @staticmethod
-    def load_from_json(json_file: str) -> 'TextPreprocessor':
+    @classmethod
+    def load_from_json(cls, json_file: str) -> Self:
         with open(json_file, 'r') as f:
             params = json.load(f)
 
-        return TextPreprocessor(**params)
+        return cls(**params)
 
     def get_preprocessing_pipeline(self):
-        """Getting the pipeline which can then be modified.
+        """Getting the pipeline.
+
+        This allows you to modify the pipeline externally and then save the modified version using
+        update_preprocessing_pipeline.
+
+        Make sure that the functions you add have the following signature
+
+        def function_name(text: str) -> Tuple[bool, str]:
         """
         return self.preprocessing_pipeline
 
-    def update_preprocessing_pipeline(self):
+    def update_preprocessing_pipeline(self, modified_pipeline):
         """Saving directly the preprocessing pipeline.
 
-        Do this at your own risk.
+        See above the correct function signature; beware of potential errors.
         """
-        return self.preprocessing_pipeline
+        self.preprocessing_pipeline = modified_pipeline
+
 
     def preprocess(self, text: str) -> Tuple[bool, str]:
         is_ok = True

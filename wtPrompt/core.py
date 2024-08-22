@@ -27,11 +27,14 @@ class BasePrompts(BaseModel):
         return self.prompts
 
     def add_prompt(self, prompt_name:str, prompt_text: str):
+        if prompt_name in self.prompts:
+            warnings.showwarning(f"Prompt {prompt_name} already present.\n"
+                                 f"Please check the prompt names!\nAdding nothing.", Warning)
+            return
         self.prompts[prompt_name] = prompt_text
 
     def _get_prompt(self, name: str) -> str:
-        """Gets a prompt; internal function.
-        """
+        # Internal function to get prompt, the other methods should be used externally
         if name in self.prompts:
             return self.prompts[name]
         raise AttributeError(f"No such prompt: '{name}'")
@@ -64,7 +67,7 @@ class BasePrompts(BaseModel):
         """
         return self._get_prompt(name)
 
-    def fill(self, prompt_name: str, fillers) -> str:
+    def fill(self, prompt_name: str, fillers: Dict[str, str]) -> str:
         """Fill a prompt.
 
         The prompt should be formatted in the following way:
@@ -84,7 +87,7 @@ class BasePrompts(BaseModel):
         """
         filled_prompt = self.prompts[prompt_name]
         # Find all the placeholders in the prompt text
-        placeholders = re.findall(r'\{\{(.[a-zA-Z0-9_]+?)?}\}', filled_prompt)
+        placeholders = re.findall(r'[{]{2}([a-zA-Z0-9_]+?)?[}]{2}', filled_prompt)
 
         # Substitute the placeholders
         for placeholder in placeholders:
@@ -142,13 +145,7 @@ class FolderPrompts(BasePrompts):
                 file_path = os.path.join(self.prompt_folder, file_name)
                 with open(file_path, 'r', encoding='utf-8') as file:
                     prompt_name = os.path.splitext(file_name)[0]
-                    if prompt_name in self.prompts:
-                        warnings.showwarning(f"Prompt {prompt_name} already present.\n"
-                                             f"You likely have two files with the name {prompt_name} and "
-                                             f"different extensions.\nPlease either remove one of the files "
-                                             f"or change one file's name", Warning)
-                        continue
-                    self.prompts[prompt_name] = file.read()
+                    self.add_prompt(prompt_name, file.read())
 
 class JsonPrompts(BasePrompts):
     """Load prompts from a json file.

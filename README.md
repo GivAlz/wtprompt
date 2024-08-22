@@ -55,6 +55,16 @@ my_prompts('prompt_name')
 Note: the JSON will be validated to check if the dictionary is correctly formatted and contains
 the proper values.
 
+### Adding Prompts in-Code
+
+It is possible to add prompts to `FolderPrompts` and `JsonPrompts`:
+
+```python
+my_prompts.add_prompt(prompt_name, prompt_text)
+```
+
+where prompt_name and prompt_text are string variables.
+
 ## Fill in Values
 
 One of the primary reasons for embedding prompts directly within the code
