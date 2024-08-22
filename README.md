@@ -19,8 +19,8 @@ from text files. Say goodbye to length issues and linting headaches.
 Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files.
 
 Then, simply run the following code:
- 
-```python   
+
+```python
 from wtPrompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
@@ -72,7 +72,7 @@ is to streamline the process of populating values.
 
 This situation is typical, for example, of a Retrieval-Augmented Generation (RAG) system,
 where the prompt often follows a structure of this kind:
-    
+
 <div class="code-title">Prompt Example</div>
 
 ```
