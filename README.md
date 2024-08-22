@@ -116,6 +116,8 @@ filled_in_prompt = my_prompts.fill_list("prompt_name",
                                         ['...context here...', '...question here...'])
 ```
 
+Note: it is better to use `fill_list` if there are few substitutions and will likely not work with nested placeholders.
+
 ## Text Preprocessing
 
 The text that is added, especially if automatically selected or typed by a user, is potentially

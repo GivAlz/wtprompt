@@ -173,7 +173,7 @@ class JsonPrompts(BasePrompts):
 
         # Validate that the content is a dictionary with string keys and values
         if not isinstance(content, dict):
-            raise ValidationError(f"The content of the file is not a dictionary.")
+            raise ValidationError("The content of the file is not a dictionary.")
         for key, value in content.items():
             if not isinstance(key, str) or not isinstance(value, str):
                 raise ValidationError(f"All keys and values in the dictionary must be strings."
