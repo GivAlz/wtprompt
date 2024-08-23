@@ -30,6 +30,7 @@ my_prompts = FolderPrompts(prompt_folder='folder_path')
 prompt = my_prompts.prompt_name
 subfolder = my_prompts.subfolder.prompt_name
 prompt = my_prompts('prompt_name')
+prompt = my_prompts('subfolder/prompt_name')
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
