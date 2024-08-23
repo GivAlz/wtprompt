@@ -2,28 +2,34 @@
 
 *wtPrompt*: a lightweight, no-nonsense library for managing your LLM prompts.
 
-Tired of cluttering your code with blocks of text? *wtPrompt* lets you keep your code clean by loading prompts from text files. Say goodbye to length issues and linting headaches.
+Tired of cluttering your code with blocks of text? *wtPrompt* lets you keep your code clean by loading prompts
+from text files. Say goodbye to length issues and linting headaches.
 
-Features:
+## Why wtPrompt?
 
-- ✅ Easily load prompts from a directory or json
-- ✅ Insert text inside your prompt at runtime
-- ✅ Readily available, basic preprocessing for the inserted text
+- ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
+- ✅ **Haystack-inspired syntax**: Leverage an already established syntax for streamlined prompt management
+- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtPrompt* is ready for that!
+- ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
+- ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
+- ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text
 
 ### Folder-Based Prompt Loading
 
-Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files.
+Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files. You can organize them
+into subfolders, and they will be loaded according to the original folder structure.
 
 Then, simply run the following code:
- 
-```python   
+
+```python
 from wtPrompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
-# Now the following will return your prompt in .str format
-my_prompts.prompt_name
-my_prompts('prompt_name')
+# Now the following commands will return your prompt as a str variable
+prompt = my_prompts.prompt_name
+subfolder = my_prompts.subfolder.prompt_name
+prompt = my_prompts('prompt_name')
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
@@ -51,6 +57,22 @@ my_prompts('prompt_name')
 Note: the JSON will be validated to check if the dictionary is correctly formatted and contains
 the proper values.
 
+### Prompts in-Code
+
+It is possible to initialise an empty `FolderPrompts` or  `JsonPrompts` class:
+
+```python
+my_prompts = FolderPrompts()
+```
+
+And then add prompts as follows:
+
+```python
+my_prompts.add_prompt(prompt_name, prompt_text)
+```
+
+where prompt_name and prompt_text are string variables.
+
 ## Fill in Values
 
 One of the primary reasons for embedding prompts directly within the code
@@ -58,7 +80,7 @@ is to streamline the process of populating values.
 
 This situation is typical, for example, of a Retrieval-Augmented Generation (RAG) system,
 where the prompt often follows a structure of this kind:
-    
+
 <div class="code-title">Prompt Example</div>
 
 ```
@@ -92,15 +114,17 @@ and then fill in the values in one of the following ways:
 
 ```python
 # Using a dictionary to make the substitutions
-filled_in_prompt = my_prompts.fill("prompt_name",
-                                   {'question': '...question here...',
-                                    'context': '...context here...'})
+filled_in_prompt = fill(wtPrompt.prompt_name, {'question': '...question here...',
+                                               'context': '...context here...'})
 
 # Using a list to make the substitutions
 # In this case the order of the variables and the placeholders has to be the same
-filled_in_prompt = my_prompts.fill_list("prompt_name",
-                                        ['...context here...', '...question here...'])
+filled_in_prompt = fill_list(wtPrompt.prompt_name, ['...context here...', '...question here...'])
 ```
+
+Remarks:
+- To minimize the likelihood of errors, it is recommended to use `fill_list` when there are only a few substitutions.
+- Nested substitutions are not allowed.
 
 ## Text Preprocessing
 

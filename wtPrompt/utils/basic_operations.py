@@ -60,11 +60,11 @@ def spaces_only(text: str) -> Tuple[bool, str]:
     text = re.sub(r'\s', ' ', text)
     return True, text
 
-def max_consecutive_spaces(text: str, max_spaces) -> Tuple[bool, str]:
+def max_consecutive_spaces(text: str, max_spaces: int) -> tuple[bool, str]:
     text = re.sub(rf'\s{{{max_spaces + 1},}}', ' ' * max_spaces, text)
     return True, text
 
-def text_truncate(text: str, max_length) -> Tuple[bool, str]:
+def text_truncate(text: str, max_length: int) -> tuple[bool, str]:
     if 0 < max_length:
         text = text[:max_length]
     return True, text
@@ -83,6 +83,4 @@ def check_letters(text: str, percentage_letters) -> Tuple[bool, str]:
     return True, text
 
 def has_min_length(text: str, min_len) -> Tuple[bool, str]:
-    if len(text) < min_len:
-        return False, text
-    return True, text
+    return len(text) >= min_len, text
