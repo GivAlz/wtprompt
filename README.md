@@ -10,13 +10,14 @@ from text files. Say goodbye to length issues and linting headaches.
 - ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
 - ✅ **Haystack-inspired syntax**: Leverage an already established syntax for streamlined prompt management
 - ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtPrompt* is ready for that!
-- ✅ **Easy Prompt Managament**: Instantly load prompts from a directory or JSON file
+- ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
 - ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
 - ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text
 
 ### Folder-Based Prompt Loading
 
-Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files.
+Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files. You can organize them
+into subfolders, and they will be loaded according to the original folder structure.
 
 Then, simply run the following code:
 
@@ -25,8 +26,9 @@ from wtPrompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
-# Now the following will return your prompt as a str variable
+# Now the following commands will return your prompt as a str variable
 prompt = my_prompts.prompt_name
+subfolder = my_prompts.subfolder.prompt_name
 prompt = my_prompts('prompt_name')
 ```
 
@@ -55,9 +57,15 @@ my_prompts('prompt_name')
 Note: the JSON will be validated to check if the dictionary is correctly formatted and contains
 the proper values.
 
-### Adding Prompts in-Code
+### Prompts in-Code
 
-It is possible to add prompts to `FolderPrompts` and `JsonPrompts`:
+It is possible to initialise an empty `FolderPrompts` or  `JsonPrompts` class:
+
+```python
+my_prompts = FolderPrompts()
+```
+
+And then add prompts as follows:
 
 ```python
 my_prompts.add_prompt(prompt_name, prompt_text)
@@ -106,17 +114,17 @@ and then fill in the values in one of the following ways:
 
 ```python
 # Using a dictionary to make the substitutions
-filled_in_prompt = my_prompts.fill("prompt_name",
-                                   {'question': '...question here...',
-                                    'context': '...context here...'})
+filled_in_prompt = fill(wtPrompt.prompt_name, {'question': '...question here...',
+                                               'context': '...context here...'})
 
 # Using a list to make the substitutions
 # In this case the order of the variables and the placeholders has to be the same
-filled_in_prompt = my_prompts.fill_list("prompt_name",
-                                        ['...context here...', '...question here...'])
+filled_in_prompt = fill_list(wtPrompt.prompt_name, ['...context here...', '...question here...'])
 ```
 
-Note: it is better to use `fill_list` if there are few substitutions and will likely not work with nested placeholders.
+Remarks:
+- To minimize the likelihood of errors, it is recommended to use `fill_list` when there are only a few substitutions.
+- Nested substitutions are not allowed.
 
 ## Text Preprocessing
 
