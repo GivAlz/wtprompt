@@ -1,6 +1,6 @@
 import os
 
-from wtPrompt.utils.preprocessor import TextPreprocessor
+from wtprompt.utils.preprocessor import TextPreprocessor
 
 def test_default_preprocessor():
     preprocessor = TextPreprocessor()
