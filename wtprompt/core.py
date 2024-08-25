@@ -4,7 +4,7 @@ import json
 import os
 import warnings
 
-from typing import Optional
+from typing import Optional, Union, Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -112,7 +112,6 @@ class FolderPrompts(PromptLoader):
                 with open(item_path, 'r', encoding='utf-8') as file:
                     prompt_name = os.path.relpath(item_path, self.prompt_folder)
                     self._prompts[prompt_name] = file.read()
-
 
 class JsonPrompts(PromptLoader):
     """Load prompts from a json file.

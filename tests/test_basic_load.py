@@ -16,7 +16,10 @@ def test_folder_prompts(test_folder_location):
     # lazy load -> the second time it uses the cached version
     for i in range(2):
         assert base_prompts('hello') == 'Say hello!'
+        assert base_prompts.hello == 'Say hello!'
         assert base_prompts('test') == 'This is a test prompt.'
+        assert base_prompts.test == base_prompts('test')
+
         # assert base_prompts.subfolder.nested == 'This is a nested prompt.' # Currently not working
         assert base_prompts('subfolder/nested') == 'This is a nested prompt.'
 
