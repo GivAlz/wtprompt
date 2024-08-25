@@ -1,8 +1,41 @@
 import re
 import warnings
 
-from typing import Dict, List
+from jinja2 import Template, meta
+from jinja2.sandbox import SandboxedEnvironment
 
+from typing import Dict, List, Any
+
+class PromptGenerator:
+    """Base class used to fill the variables inside a prompt.
+
+    The prompt should be formatter using Jinja2 template syntax
+
+    """
+    def __init__(self):
+        """Initialises the necessary classes by Jinja.
+
+        """
+        self._sandbox_env = SandboxedEnvironment()
+        self._compiled_templates = {}
+        self._necessary_variables = {}
+
+    def get_or_compile_prompt(self, prompt_text: str) -> Template:
+        """Get a prompt Template, compiling it if necessary.
+
+        :param prompt_text: Text for the prompt
+        :return: Compiled Jinja2 Template object
+        """
+        if compiled_prompt := self._compiled_templates.get(prompt_text):
+            return compiled_prompt
+        compiled_prompt = self._sandbox_env.from_string(prompt_text)
+        self._compiled_templates[prompt_text] = compiled_prompt
+        return compiled_prompt
+
+    def fill_prompt(self, prompt_text, variables: Dict[str, str]) -> str:
+        prompt_template = self.get_or_compile_prompt(prompt_text)
+        result = prompt_template.render(variables)
+        return result
 
 def fill_prompt(prompt_text: str, fillers: Dict[str, str]) -> str:
     """Fill a prompt.
@@ -55,3 +88,10 @@ def fill_list(prompt_text: str, values: List[str]) -> str:
     prompt_text = re.sub(r'\{\{([a-zA-Z0-9_]*?)?}\}', replacement, prompt_text)
 
     return prompt_text
+
+if __name__ == '__main__':
+    pg = PromptGenerator()
+    a = 'fill'
+    modified_prompt_1 = pg.fill_prompt('Test {{ a }}', {'a': a})
+    modified_prompt_2 = pg.fill_prompt('Test {{ a }}', {'a': a})
+    assert modified_prompt_1 == modified_prompt_2 == 'Test fill'

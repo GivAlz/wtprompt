@@ -8,7 +8,7 @@ from text files. Say goodbye to length issues and linting headaches.
 ## Why wtPrompt?
 
 - ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
-- ✅ **Haystack-inspired syntax**: Leverage an already established syntax for streamlined prompt management
+- ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries
 - ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtPrompt* is ready for that!
 - ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
 - ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
