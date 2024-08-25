@@ -28,7 +28,8 @@ my_prompts = FolderPrompts(prompt_folder='folder_path')
 
 # Now the following commands will return your prompt as a str variable
 prompt = my_prompts.prompt_name
-subfolder = my_prompts.subfolder.prompt_name
+# Note, nested calls like `my_prompts.subfolder.prompt_name` won't work!
+
 prompt = my_prompts('prompt_name')
 prompt = my_prompts('subfolder/prompt_name')
 ```
@@ -68,16 +69,16 @@ the proper values.
 
 ### Prompts in-Code
 
-It is possible to initialise an empty `FolderPrompts` or  `JsonPrompts` class:
+It is possible to initialise an empty `PromptLoader` class:
 
 ```python
-my_prompts = FolderPrompts()
+my_prompts = PromptLoader()
 ```
 
 And then add prompts as follows:
 
 ```python
-my_prompts.get_or_add_prompt(prompt_name, prompt_text)
+my_prompts.add_prompt(prompt_name, prompt_text)
 ```
 
 where prompt_name and prompt_text are string variables.

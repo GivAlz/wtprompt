@@ -2,45 +2,35 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
 
-from typing import Dict, Optional, Union, Any
+from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
 class PromptLoader(BaseModel):
     """Base class to manage prompt loading.
-
-    This class can only
     """
     def __init__(self, **data):
         # Loading using pydantic validators
         super().__init__(**data)
-        self._prompts = {} #Dictionary to store prompt sub structure
+        self._prompts = {}
 
-    def _get_prompt_text(self, prompt_name: str, full_path: str):
-        try:
-            return self.prompts[prompt_name]
-        except ValueError:
-            raise ValueError(f"Prompt {full_path} not found!")
+    def add_prompt(self, prompt_name: str, prompt_text: str):
+        if prompt_name in self._prompts:
+            warnings.showwarning(f"Prompt {prompt_name} already present.\n"
+                                 f"Please check the prompt names!\nAdding nothing.", Warning)
+            return
+        self._prompts[prompt_name] = prompt_text
+
+    def _get_prompt_text(self, prompt_name: str):
+        return self._prompts[prompt_name]
 
     def get_prompts(self):
         return self._prompts
 
-    def _get_prompt(self, prompt_name: str, full_path: str) -> str:
-        if '/' in prompt_name:
-            current_key, other_keys = prompt_name.split('/', 1)
-            if not (sub_folder := self._prompts.get(current_key)):
-                self._prompts[current_key] = sub_folder = PromptLoader()
-            sub_folder.get_or_add_prompt(other_keys, full_path)
-
-        if prompt_name in self._prompts:
-            return self._prompts[prompt_name]
-
-        self._prompts[prompt_name] = prompt_text = self._get_prompt_text(prompt_name, full_path)
-        return prompt_text
-
-    def __getattr__(self, name: str) -> str:
+    def __getattr__(self, prompt_name: str) -> str:
         """Access prompt content via attribute-style access.
 
         Example:
@@ -52,9 +42,9 @@ class PromptLoader(BaseModel):
 
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
-        return self._get_prompt(name, name)
+        return self._get_prompt_text(prompt_name)
 
-    def __call__(self, name: str) -> Optional[str]:
+    def __call__(self, prompt_name: str) -> Optional[str]:
         """Access prompt content via function-call-style access.
 
         Example:
@@ -62,11 +52,11 @@ class PromptLoader(BaseModel):
 
                 prompt_class_instance('hello')
 
-        :param name (str): The name of the prompt to access.
+        :param prompt_name (str): The name of the prompt to access.
 
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
-        return self._get_prompt(name, name)
+        return self._get_prompt_text(prompt_name)
 
 
 class FolderPrompts(PromptLoader):
@@ -86,39 +76,42 @@ class FolderPrompts(PromptLoader):
             raise ValueError(f"The provided path '{dirname}' is not a valid directory.")
         return dirname
 
-    def _get_prompt_text(self, prompt_name: str, full_path: str):
-        full_path = os.path.join(self.prompt_folder, full_path)
-        md_path = f"{full_path}.md"
-        if os.path.isfile(md_path):
-            with open(md_path, 'r', encoding='utf-8') as file:
-                return file.read().strip()
+    def _get_prompt_text(self, prompt_name: str):
+        if prompt_name in self._prompts:
+            return self._prompts[prompt_name]
+        # Prompt not found: loading it
+        prompt_text = self._load_prompt_from_file(prompt_name)
+        self._prompts[prompt_name] = prompt_text
+        return prompt_text
 
-        txt_path = f"{full_path}.txt"
-        if os.path.isfile(txt_path):
-            with open(txt_path, 'r', encoding='utf-8') as file:
-                return file.read().strip()
+    def _load_prompt_from_file(self, prompt_name: str) -> str:
+        prompt_name = os.path.join(self.prompt_folder, prompt_name)
+        file_extensions = ['.md', '.txt']
 
-        # If neither .txt nor .md file is found, raise an error
-        raise FileNotFoundError(
-            f"No .txt or .md file found for '{prompt_name}' at '{full_path}'. Can't load the prompt!")
+        for ext in file_extensions:
+            file_path = f"{prompt_name}{ext}"
+            if os.path.isfile(file_path):
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    return file.read().strip()
+
+        raise FileNotFoundError(f"No .txt or .md file found for '{prompt_name}'. Can't load the prompt!")
 
     def load(self):
         """Loads .txt and .md files from the folder into the prompts dictionary."""
         if self.prompt_folder == '':
             return
-        self._load_from_folder(self.prompt_folder, self.prompts)
+        self._load_from_folder(self.prompt_folder)
 
-    @staticmethod
-    def _load_from_folder(folder_path, prompts_dict):
+    def _load_from_folder(self, folder_path):
         """Recursively loads files from the given folder path into the provided prompts dictionary."""
         for item in os.listdir(folder_path):
             item_path = os.path.join(folder_path, item)
             if os.path.isdir(item_path):
-                prompts_dict[item] = FolderPrompts(prompt_folder=item_path)
+                self._load_from_folder(folder_path=item_path)
             elif item.endswith('.txt') or item.endswith('.md'):
                 with open(item_path, 'r', encoding='utf-8') as file:
-                    prompt_name = os.path.splitext(item)[0]
-                    prompts_dict[prompt_name] = file.read()
+                    prompt_name = os.path.relpath(item_path, self.prompt_folder)
+                    self._prompts[prompt_name] = file.read()
 
 
 class JsonPrompts(PromptLoader):
@@ -137,23 +130,9 @@ class JsonPrompts(PromptLoader):
         # No support for lazy loading for json
         self.load()
 
-    def load(self, prompt_dictionary: Dict[str, Any] = None):
-        if prompt_dictionary is None:
-            if self.prompt_file == '':
-                return
-            """Loads the json into the prompts dictionary."""
-            with open(self.prompt_file, 'r', encoding='utf-8') as file:
-                prompt_dictionary = json.load(file)
-        self._load_from_json(prompt_dictionary)
-
-
-    @staticmethod
-    def _load_from_json(prompts_dict):
-        """Recursively loads files from the given folder path into the provided prompts dictionary."""
-        for p_name, p_value in prompts_dict.items():
-            if isinstance(p_value, dict):
-                prompts_dict[p_name] = JsonPrompts(prompt_dictionary=p_value)
-            elif isinstance(p_value, str):
-                prompts_dict[p_name] = p_value
-            else:
-                raise ValueError(f"JSON incorrectly formatted, can't find {p_value} is not a valid prompt!")
+    def load(self):
+        if self.prompt_file == '':
+            return
+        """Loads the json into the prompts dictionary."""
+        with open(self.prompt_file, 'r', encoding='utf-8') as file:
+            self._prompts = json.load(file)
