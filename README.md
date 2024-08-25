@@ -7,7 +7,7 @@ from text files. Say goodbye to length issues and linting headaches.
 
 ## Why wtprompt?
 
-- ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
+- ✅ **Lightweight, zero bloat**: need to just work with prompts? Use this instead of a full MLOps library
 - ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries
 - ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtprompt* is ready for that!
 - ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
@@ -28,12 +28,17 @@ my_prompts = FolderPrompts(prompt_folder='folder_path')
 
 # Now the following commands will return your prompt as a str variable
 prompt = my_prompts.prompt_name
-subfolder = my_prompts.subfolder.prompt_name
+# Note, nested calls like `my_prompts.subfolder.prompt_name` won't work!
+
 prompt = my_prompts('prompt_name')
 prompt = my_prompts('subfolder/prompt_name')
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
+
+Remark:
+
+Folder-based loading is lazy: call the `.load()` method to load the whole folder structure.
 
 ### JSON-Based Prompt Loading
 
@@ -55,15 +60,18 @@ my_prompts.prompt_name
 my_prompts('prompt_name')
 ```
 
-Note: the JSON will be validated to check if the dictionary is correctly formatted and contains
-the proper values.
+
+Remark:
+
+- To speed up the loading times the JSON is not validated: pass the flag `validate=True` or use the function `validate_json` to check your json file.
+- Currently lazy loading is not supported for JSON files.
 
 ### Prompts in-Code
 
-It is possible to initialise an empty `FolderPrompts` or  `JsonPrompts` class:
+It is possible to initialise an empty `PromptLoader` class:
 
 ```python
-my_prompts = FolderPrompts()
+my_prompts = PromptLoader()
 ```
 
 And then add prompts as follows:
