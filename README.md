@@ -7,7 +7,7 @@ from text files. Say goodbye to length issues and linting headaches.
 
 ## Why wtprompt?
 
-- ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
+- ✅ **Lightweight, zero bloat**: need to just work with prompts? Use this instead of a full MLOps library
 - ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries
 - ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtprompt* is ready for that!
 - ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
@@ -35,6 +35,10 @@ prompt = my_prompts('subfolder/prompt_name')
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
 
+Remark:
+
+Folder-based loading is lazy: call the `.load()` method to load the whole folder structure.
+
 ### JSON-Based Prompt Loading
 
 Another option is to store your prompts in a .json file dictionary, of the kind:
@@ -55,8 +59,12 @@ my_prompts.prompt_name
 my_prompts('prompt_name')
 ```
 
-Note: the JSON will be validated to check if the dictionary is correctly formatted and contains
+
+Remark:
+
+- The JSON will be validated to check if the dictionary is correctly formatted and contains
 the proper values.
+- Currently lazy loading is not supported for JSON files.
 
 ### Prompts in-Code
 
@@ -69,7 +77,7 @@ my_prompts = FolderPrompts()
 And then add prompts as follows:
 
 ```python
-my_prompts.add_prompt(prompt_name, prompt_text)
+my_prompts.get_or_add_prompt(prompt_name, prompt_text)
 ```
 
 where prompt_name and prompt_text are string variables.
