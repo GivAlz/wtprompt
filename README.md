@@ -1,15 +1,15 @@
-# 🤌 wtPrompt (What the Prompt?)
+# 🤌 wtprompt (What the Prompt?)
 
-*wtPrompt*: a lightweight, no-nonsense library for managing your LLM prompts.
+*wtprompt*: a lightweight, no-nonsense library for managing your LLM prompts.
 
-Tired of cluttering your code with blocks of text? *wtPrompt* lets you keep your code clean by loading prompts
+Tired of cluttering your code with blocks of text? *wtprompt* lets you keep your code clean by loading prompts
 from text files. Say goodbye to length issues and linting headaches.
 
-## Why wtPrompt?
+## Why wtprompt?
 
 - ✅ **Lightweight, zero bloat**: need to just work with prompts? No need for a full MLOps library, such as Haystack
-- ✅ **Haystack-inspired syntax**: Leverage an already established syntax for streamlined prompt management
-- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtPrompt* is ready for that!
+- ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries
+- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtprompt* is ready for that!
 - ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
 - ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
 - ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text
@@ -22,7 +22,7 @@ into subfolders, and they will be loaded according to the original folder struct
 Then, simply run the following code:
 
 ```python
-from wtPrompt.core import FolderPrompts
+from wtprompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
@@ -30,6 +30,7 @@ my_prompts = FolderPrompts(prompt_folder='folder_path')
 prompt = my_prompts.prompt_name
 subfolder = my_prompts.subfolder.prompt_name
 prompt = my_prompts('prompt_name')
+prompt = my_prompts('subfolder/prompt_name')
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
@@ -46,7 +47,7 @@ Another option is to store your prompts in a .json file dictionary, of the kind:
 This can be used in a similar fashion:
 
 ```python
-from wtPrompt.core import JsonPrompts
+from wtprompt.core import JsonPrompts
 
 my_prompts = JsonPrompts(prompt_file='path_to_json.json')
 
@@ -95,8 +96,13 @@ Answer the following question
 --- variable question ---
 ```
 
-*wtPrompt* allows to elegantly handle this situation,
-for example by writing the prompt as follows:
+*wtprompt* allows to easily handle this use case. There are two main approaches:
+
+- `fill_list`: a function which will substitute some values in order, quicker to use for simple substitutions
+- `PromptGenerator`: a class which, through the method `fill_prompt`,
+- allows to use the [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates.
+
+For example by writing the previous prompt as follows:
 
 ```
 Basing your answer only on the following context
@@ -110,21 +116,23 @@ Answer the following question
 {{question}}
 ```
 
-and then fill in the values in one of the following ways:
+it is possible to make the proper substitutions in one of the following ways:
 
 ```python
+p_gen = PromptGenerator()
 # Using a dictionary to make the substitutions
-filled_in_prompt = fill(wtPrompt.prompt_name, {'question': '...question here...',
+filled_in_prompt = p_gen.fill_prompt(wtprompt.prompt_name, {'question': '...question here...',
                                                'context': '...context here...'})
 
 # Using a list to make the substitutions
 # In this case the order of the variables and the placeholders has to be the same
-filled_in_prompt = fill_list(wtPrompt.prompt_name, ['...context here...', '...question here...'])
+filled_in_prompt = fill_list(wtprompt.prompt_name, ['...context here...', '...question here...'])
 ```
 
 Remarks:
+- Jinja can be flexible and powerful, which is why it is used by many projects (for instance Haystack). See Jinja's documentation for more details.
 - To minimize the likelihood of errors, it is recommended to use `fill_list` when there are only a few substitutions.
-- Nested substitutions are not allowed.
+- For `fill_list`, nested substitutions are not allowed.
 
 ## Text Preprocessing
 

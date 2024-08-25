@@ -3,8 +3,8 @@ import os.path
 import pytest
 from pydantic import ValidationError
 
-from wtPrompt.core import FolderPrompts, JsonPrompts
-from wtPrompt.fill import fill_prompt, fill_list
+from wtprompt.core import FolderPrompts, JsonPrompts
+from wtprompt.fill import PromptGenerator, fill_list
 
 
 def test_folder_prompts(test_folder_location):
@@ -22,12 +22,20 @@ def test_json_prompts(test_folder_location):
 def test_prompts_fill(test_folder_location):
     base_prompts = FolderPrompts(prompt_folder=os.path.join(test_folder_location, 'test_prompts'))
     target_str = "This is a test: today is Monday August."
-    assert fill_prompt(base_prompts.fill_test, {'day': 'Monday', 'this_month': 'August'}) == target_str
-    assert fill_prompt(base_prompts.fill_test, {'this_month': 'August', 'day': 'Monday'}) == target_str
+
+    p_gen = PromptGenerator()
+    assert p_gen.fill_prompt(base_prompts.fill_test, {'day': 'Monday', 'this_month': 'August'}) == target_str
+    assert p_gen.fill_prompt(base_prompts.fill_test, {'this_month': 'August', 'day': 'Monday'}) == target_str
     assert fill_list(base_prompts.fill_test, ['Monday', 'August']) == target_str
 
     target_str = "This is a test: today is August Monday."
     assert fill_list(base_prompts.fill_test, ['August', 'Monday']) == target_str
+
+    a = 'fill'
+    modified_prompt_1 = p_gen.fill_prompt('Test {{ a }} and {{a}}', {'a': a})
+    modified_prompt_2 = p_gen.fill_prompt('Test {{ a }} and {{a}}', {'a': a})
+    assert modified_prompt_1 == modified_prompt_2 == 'Test fill and fill'
+
 
 def test_loading_errors():
     prompt_file = 'non_existent.json'

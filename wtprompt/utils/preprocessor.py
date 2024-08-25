@@ -4,7 +4,7 @@ import json
 from typing import Tuple, List
 from pydantic import Field, BaseModel, field_validator, model_validator
 
-from wtPrompt.utils.basic_operations import (
+from wtprompt.utils.basic_operations import (
     do_strip,
     check_empty,
     spaces_only,

@@ -1,4 +1,4 @@
-from wtPrompt.utils.basic_operations import (
+from wtprompt.utils.basic_operations import (
     do_strip,
     check_empty,
     spaces_only,
