@@ -63,7 +63,7 @@ my_prompts('prompt_name')
 
 Remark:
 
-- To speed up the loading times the JSON is not validated: check if it is properly formatted.
+- To speed up the loading times the JSON is not validated: pass the flag `validate=True` or use the function `validate_json` to check your json file.
 - Currently lazy loading is not supported for JSON files.
 
 ### Prompts in-Code

@@ -8,6 +8,8 @@ from typing import Optional, Union, Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from wtprompt.utils.json_validator import validate_json
+
 
 class PromptLoader(BaseModel):
     """Base class to manage prompt loading.
@@ -123,9 +125,12 @@ class JsonPrompts(PromptLoader):
     The json should contain a dictionary of the kind: {'prompt name': 'prompt text'}
     """
     prompt_file: str = Field('', description="The .json file containing the prompts.")
+    validate_json: bool = Field(False, description="If True evaluates the JSON before loading it.")
 
     def __init__(self, **data):
         super().__init__(**data)
+        if self.validate_json:
+            validate_json(self.prompt_file)
         # No support for lazy loading for json
         self.load()
 

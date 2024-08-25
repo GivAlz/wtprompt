@@ -1,7 +1,6 @@
 import os.path
 
 import pytest
-from pydantic import ValidationError
 
 from wtprompt.core import FolderPrompts, JsonPrompts, PromptLoader
 from wtprompt.fill import PromptGenerator, fill_list
