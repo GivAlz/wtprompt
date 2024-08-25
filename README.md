@@ -63,8 +63,7 @@ my_prompts('prompt_name')
 
 Remark:
 
-- The JSON will be validated to check if the dictionary is correctly formatted and contains
-the proper values.
+- To speed up the loading times the JSON is not validated: check if it is properly formatted.
 - Currently lazy loading is not supported for JSON files.
 
 ### Prompts in-Code
