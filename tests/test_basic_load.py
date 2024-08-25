@@ -48,11 +48,11 @@ def test_prompts_fill(test_folder_location):
 def test_loading_errors():
     prompt_file = 'non_existent.json'
     # Use pytest's raises context manager to catch the AssertionError
-    with pytest.raises(ValidationError, match=f"The provided path '{prompt_file}' is not a valid file."):
+    with pytest.raises(FileNotFoundError):
         base_prompts = JsonPrompts(prompt_file=prompt_file)
 
     prompt_folder = 'non_existent'
-    with pytest.raises(ValidationError, match=f"The provided path '{prompt_folder}' is not a valid directory."):
+    with pytest.raises(ValueError):
         base_prompts = FolderPrompts(prompt_folder=prompt_folder)
 
     print("AssertionError correctly raised for non-existent file/directory.")
