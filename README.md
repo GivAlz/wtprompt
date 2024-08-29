@@ -106,7 +106,7 @@ Answer the following question
 
 *wtprompt* allows to easily handle this use case. There are two main approaches:
 
-- `fill_list`: a function which will substitute some values in order, quicker to use for simple substitutions
+- `fill_list`: a function which will substitute some values in order, quicker to use for simple substitutions: not necessarily compatible with jinja syntax!
 - `PromptGenerator`: a class which, through the method `fill_prompt`,
 - allows to use the [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates.
 
