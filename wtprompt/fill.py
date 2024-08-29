@@ -55,6 +55,7 @@ class PromptGenerator:
         result = prompt_template.render(variables)
         return result
 
+_PLACEHOLDER = r'[{]{2}([a-zA-Z0-9_ ]*)[}]{2}'
 
 def fill_list(prompt_text: str, values: List[str]) -> str:
     """Basic function to fill a prompt.
@@ -66,7 +67,7 @@ def fill_list(prompt_text: str, values: List[str]) -> str:
 
     It expects to find the same number of placeholders and values.
     """
-    placeholders = re.findall(r'[{]{2}([a-zA-Z0-9_ ]*)[}]{2}', prompt_text)
+    placeholders = re.findall(_PLACEHOLDER, prompt_text)
 
     if len(values) != len(placeholders):
         warnings.showwarning(f"Using {len(values)} values to fill {len(placeholders)} placeholders:"
@@ -78,6 +79,6 @@ def fill_list(prompt_text: str, values: List[str]) -> str:
             return value
         return match.group(0)
 
-    prompt_text = re.sub(r'\{\{([a-zA-Z0-9_]*?)?}\}', replacement, prompt_text)
+    prompt_text = re.sub(_PLACEHOLDER, replacement, prompt_text)
 
     return prompt_text
