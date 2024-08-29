@@ -1,3 +1,29 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "wtprompt"
+version = '0.1.0'
+description = "A lightweight, no-nonsense library for managing your LLM prompts."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Giovanni Alzetta", email = "giovannialzetta@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/GivAlz/wtprompt"
+
+[tool.setuptools.packages.find]
+include = ["wtprompt*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

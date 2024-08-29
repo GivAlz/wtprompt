@@ -1,18 +1,18 @@
-# 🤌 wtprompt (What the Prompt?)
+# 🤌 wtprompt: What the Prompt?
 
-*wtprompt*: a lightweight, no-nonsense library for managing your LLM prompts.
+*wtprompt* is a lightweight, no-nonsense library designed to help you manage your LLM prompts efficiently.
 
 Tired of cluttering your code with blocks of text? *wtprompt* lets you keep your code clean by loading prompts
 from text files. Say goodbye to length issues and linting headaches.
 
 ## Why wtprompt?
 
-- ✅ **Lightweight, zero bloat**: need to just work with prompts? Use this instead of a full MLOps library
-- ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries
-- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language, *wtprompt* is ready for that!
-- ✅ **Easy Prompt Managament**: Instantly load prompts from a directory (and its subdirectories) or JSON file
-- ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime
-- ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text
+- ✅ **Lightweight, zero bloat**: need to just work with prompts? Use this as an alternative to a full MLOps library.
+- ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries.
+- ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language; *wtprompt* is ready for that!
+- ✅ **Easy PromptManagement**:  Instantly load prompts from a directory (and its subdirectories) or a JSON file.
+- ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime.
+- ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text.
 
 ### Folder-Based Prompt Loading
 
@@ -26,7 +26,7 @@ from wtprompt.core import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
-# Now the following commands will return your prompt as a str variable
+# The following commands will retrieve your prompt as a string variable:
 prompt = my_prompts.prompt_name
 # Note, nested calls like `my_prompts.subfolder.prompt_name` won't work!
 
@@ -42,7 +42,7 @@ Folder-based loading is lazy: call the `.load()` method to load the whole folder
 
 ### JSON-Based Prompt Loading
 
-Another option is to store your prompts in a .json file dictionary, of the kind:
+Another option is to store your prompts in a .json file:
 
     {
         'prompt name' : 'prompt content',
@@ -63,12 +63,12 @@ my_prompts('prompt_name')
 
 Remark:
 
-- To speed up the loading times the JSON is not validated: pass the flag `validate=True` or use the function `validate_json` to check your json file.
+- To speed up the loading times, the JSON is not validated: pass the flag `validate=True` or use the function `validate_json` to check your json file.
 - Currently lazy loading is not supported for JSON files.
 
 ### Prompts in-Code
 
-It is possible to initialise an empty `PromptLoader` class:
+It is possible to initialize an empty `PromptLoader` class:
 
 ```python
 my_prompts = PromptLoader()
@@ -106,9 +106,9 @@ Answer the following question
 
 *wtprompt* allows to easily handle this use case. There are two main approaches:
 
-- `fill_list`: a function which will substitute some values in order, quicker to use for simple substitutions
+- `fill_list`: a function which will substitute some values in order, quicker to use for simple substitutions: not necessarily compatible with jinja syntax!
 - `PromptGenerator`: a class which, through the method `fill_prompt`,
-- allows to use the [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates.
+- allows you to use the [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates.
 
 For example by writing the previous prompt as follows:
 
@@ -133,7 +133,7 @@ filled_in_prompt = p_gen.fill_prompt(wtprompt.prompt_name, {'question': '...ques
                                                'context': '...context here...'})
 
 # Using a list to make the substitutions
-# In this case the order of the variables and the placeholders has to be the same
+# In this case, the order of the variables and placeholders must match.
 filled_in_prompt = fill_list(wtprompt.prompt_name, ['...context here...', '...question here...'])
 ```
 
@@ -147,14 +147,13 @@ Remarks:
 The text that is added, especially if automatically selected or typed by a user, is potentially
 messy.
 
-For this reason wrPrompt offers a basic tool `TextPreprocessor`, that does some basic preprocessing.
+For this reason, wtprompt offers a basic tool `TextPreprocessor`, that does some basic preprocessing.
 
 The `preprocessor` method returns a `bool` and a `str`; if the `bool` is `False`
 the preprocessing stopped half-way because of some property not being satisfied, if it is
 `True` then the `str` is the processed string.
 
-The following  variables control the default functionalities of the class:
-
+The following variables control the default behavior of the class:
 
 - **do_strip (bool)**: If True removes leading and trailing whitespace.
 - **check_empty (bool)**: Verifies if the text is non-empty.
@@ -186,10 +185,13 @@ def build_prompt(my_prompts, preprocessor, context, question):
 ## TL;DR
 
 - Organize your prompts by storing them in a folder or within a JSON file.
-- Utilize a dictionary or list to dynamically modify the prompts during runtime.
+- Use a dictionary or list to dynamically modify prompts at runtime.
 - Apply the preprocessor to perform basic processing on the filler values before using the prompts.
 
 ### License
 
 This software is distributed under the MIT License (see LICENSE for details).
-You are free to use, modify, and distribute it as you wish; however, attribution is appreciated.
+
+Contributions are welcome!
+
+You are free to use, modify, and distribute it as you wish, though attribution is appreciated.
