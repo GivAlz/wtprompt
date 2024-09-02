@@ -72,8 +72,6 @@ class TextPreprocessor(BaseModel):
 
     def build_pipeline(self):
         preprocessing_pipeline = []
-        if self.do_strip:
-            preprocessing_pipeline.append(do_strip)
 
         if self.check_empty:
             preprocessing_pipeline.append(check_empty)
@@ -84,9 +82,6 @@ class TextPreprocessor(BaseModel):
         if self.max_consecutive_spaces > 0:
             preprocessing_pipeline.append(
                 lambda text: max_consecutive_spaces(text, self.max_consecutive_spaces))
-
-        if self.do_truncate and -1 < self.max_length:
-            preprocessing_pipeline.append(lambda text: text_truncate(text, self.max_length))
 
         if self.ascii_only:
             preprocessing_pipeline.append(ascii_only)
@@ -99,6 +94,14 @@ class TextPreprocessor(BaseModel):
 
         if self.min_length > -1:
             preprocessing_pipeline.append(lambda text: has_min_length(text, self.min_length))
+
+        if self.do_strip:
+            # Stripping again, in case chars were removed at the beginning/end
+            preprocessing_pipeline.append(do_strip)
+
+        if self.do_truncate and -1 < self.max_length:
+            # Truncating at the end, to guarantee output length
+            preprocessing_pipeline.append(lambda text: text_truncate(text, self.max_length))
 
         return preprocessing_pipeline
 

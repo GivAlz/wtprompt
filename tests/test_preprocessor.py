@@ -18,3 +18,7 @@ def test_preprocessor_json(test_folder_location):
 def test_preprocessor_inline():
     preprocessor = TextPreprocessor(do_truncate=True, max_length=10)
     assert preprocessor.preprocess("abcdefghilmn hola"), (True, "abcdefghil")
+
+def test_preprocessor_strip():
+    preprocessor = TextPreprocessor(do_strip=True, ascii_only=True)
+    assert preprocessor.preprocess(" abcdefghilmn hola ö "), (True, "abcdefghilmn hola")
