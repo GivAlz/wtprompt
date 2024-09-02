@@ -1,7 +1,5 @@
 import os
 
-from nbconvert.filters import ascii_only
-
 from wtprompt.utils.preprocessor import TextPreprocessor
 
 def test_default_preprocessor():
