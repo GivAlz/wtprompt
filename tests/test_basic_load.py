@@ -2,8 +2,8 @@ import os.path
 
 import pytest
 
-from wtprompt.core import FolderPrompts, JsonPrompts, PromptLoader
-from wtprompt.fill import PromptGenerator, fill_list
+from wtprompt import FolderPrompts, JsonPrompts, PromptLoader
+from wtprompt import PromptGenerator, fill_list
 
 def test_prompt_loader():
     prompt_loader = PromptLoader()

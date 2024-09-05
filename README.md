@@ -14,6 +14,14 @@ from text files. Say goodbye to length issues and linting headaches.
 - ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime.
 - ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text.
 
+## Installation
+
+Clone and install from this github repo or simply run:
+
+    pip install wtprompt
+
+
+
 ### Folder-Based Prompt Loading
 
 Gather all your prompts into a folder, e.g. `folder_path`, saving them as `.txt` or `.md` files. You can organize them
@@ -22,7 +30,7 @@ into subfolders, and they will be loaded according to the original folder struct
 Then, simply run the following code:
 
 ```python
-from wtprompt.core import FolderPrompts
+from wtprompt import FolderPrompts
 
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
@@ -52,7 +60,7 @@ Another option is to store your prompts in a .json file:
 This can be used in a similar fashion:
 
 ```python
-from wtprompt.core import JsonPrompts
+from wtprompt import JsonPrompts
 
 my_prompts = JsonPrompts(prompt_file='path_to_json.json')
 
@@ -71,6 +79,8 @@ Remark:
 It is possible to initialize an empty `PromptLoader` class:
 
 ```python
+from wtprompt import PromptLoader
+
 my_prompts = PromptLoader()
 ```
 
@@ -171,6 +181,8 @@ The following variables control the default behavior of the class:
 To continue the previous example, it is possible to perform a basic preprocessing in the following way:
 
 ```python
+from wtprompt.utils.preprocessor import TextPreprocessor
+
 preprocessor = TextPreprocessor()
 
 def build_prompt(my_prompts, preprocessor, context, question):
