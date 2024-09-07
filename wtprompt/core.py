@@ -4,7 +4,7 @@ import json
 import os
 import warnings
 
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -72,17 +72,56 @@ class FolderPrompts(PromptLoader):
     """
     prompt_folder: str = Field('', description="The folder containing .txt and .md files.")
 
+    def __init__(self, **data):
+        # Loading using pydantic validators
+        super().__init__(**data)
+        self._pre_prompt = ''
+
     @field_validator('prompt_folder')
     def validate_folder(cls, dirname):
         if not os.path.isdir(dirname) and not dirname == '':
             raise ValueError(f"The provided path '{dirname}' is not a valid directory.")
         return dirname
 
+    def _temp_prompt_folder(self, prompt_folder: str):
+        if prompt_folder:
+            self._pre_prompt = os.path.join(self._pre_prompt, prompt_folder)
+        else:
+            self._pre_prompt = ''
+
+    def __getattr__(self, prompt_name: str) -> Union[str, FolderPrompts]:
+        """Access prompt content via attribute-style access.
+
+        Example:
+            To access the content of a prompt named 'hello', use:
+
+                prompt_class_instance.hello
+
+        :param name (str): The name of the prompt to access.
+
+        :returns: The content of the prompt if it exists, otherwise throws an attribute error.
+        """
+        prompt_name = os.path.join(self._pre_prompt, prompt_name)
+        # Trying to load the prompt from memory or from file
+        prompt_text = self._prompts.get(prompt_name)
+        if prompt_text is None:
+            prompt_text = self._load_prompt_from_file(prompt_name)
+
+        if isinstance(prompt_text, str):
+            self._temp_prompt_folder('')
+            return prompt_text
+        # Last possibility: this is a folder
+        self._temp_prompt_folder(prompt_name)
+        # TODO: This approach is buggy as, if a text is not found, it will end up returning a FolderPrompts object
+        return self
+
     def _get_prompt_text(self, prompt_name: str):
         if prompt_name in self._prompts:
             return self._prompts[prompt_name]
         # Prompt not found: loading it
         prompt_text = self._load_prompt_from_file(prompt_name)
+        if prompt_name is None:
+            raise FileNotFoundError(f"No .txt or .md file found for '{prompt_name}'. Can't load the prompt!")
         self._prompts[prompt_name] = prompt_text
         return prompt_text
 
@@ -96,7 +135,7 @@ class FolderPrompts(PromptLoader):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     return file.read().strip()
 
-        raise FileNotFoundError(f"No .txt or .md file found for '{prompt_name}'. Can't load the prompt!")
+        return None
 
     def load(self):
         """Loads .txt and .md files from the folder into the prompts dictionary."""

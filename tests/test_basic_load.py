@@ -21,6 +21,7 @@ def test_folder_prompts(test_folder_location):
 
         # assert base_prompts.subfolder.nested == 'This is a nested prompt.' # Currently not working
         assert base_prompts('subfolder/nested') == 'This is a nested prompt.'
+        assert base_prompts.subfolder.nested == base_prompts('subfolder/nested')
 
 def test_json_prompts(test_folder_location):
     base_prompts = JsonPrompts(prompt_file=os.path.join(test_folder_location, 'test_prompts', 'test.json'))
