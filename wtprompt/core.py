@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import pathlib
 import warnings
 
 from typing import Optional, Union
@@ -31,6 +33,17 @@ class PromptLoader(BaseModel):
 
     def get_prompts(self):
         return self._prompts
+
+    def save_prompt_report(self, outfile: str):
+        # Hashing prompts
+        prompt_hashes = {}
+        for key, prompt in self._prompts.items():
+            prompt_hashes[key] = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
+        # Saving report
+        outfile = pathlib.Path(outfile).with_suffix('.json')
+        with open(outfile, 'w') as f:
+            json.dump(prompt_hashes, f)
 
     def __getattr__(self, prompt_name: str) -> str:
         """Access prompt content via attribute-style access.
@@ -83,6 +96,19 @@ class FolderPrompts(PromptLoader):
             raise ValueError(f"The provided path '{dirname}' is not a valid directory.")
         return dirname
 
+    def load_from_prompt_report(self, outfile: str):
+        outfile =  pathlib.Path(outfile).with_suffix('.json')
+        with open(outfile, 'r') as f:
+            prompt_hashes = json.load(f)
+
+        for prompt_name, prompt_hash in prompt_hashes.items():
+            prompt_text = self._get_prompt_text(prompt_name)
+            computed_hash = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            if computed_hash != prompt_hash:
+                warnings.showwarning(f"Prompt {prompt_name} has different has!\n"
+                                     f"Expected hash: {prompt_hash}\nLoaded hash: {computed_hash}", Warning)
+
+
     def _temp_prompt_folder(self, prompt_folder: str):
         if prompt_folder:
             self._pre_prompt = os.path.join(self._pre_prompt, prompt_folder)
@@ -130,7 +156,7 @@ class FolderPrompts(PromptLoader):
         file_extensions = ['.md', '.txt']
 
         for ext in file_extensions:
-            file_path = f"{prompt_name}{ext}"
+            file_path = pathlib.Path(prompt_name).with_suffix(ext)
             if os.path.isfile(file_path):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     return file.read().strip()
