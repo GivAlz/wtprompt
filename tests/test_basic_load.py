@@ -34,6 +34,11 @@ def test_folder_prompts(test_folder_location):
         assert 'hello' in loaded_keys and 'test' in loaded_keys
         assert 'subfolder/nested'in loaded_keys
 
+    try:
+        print(base_prompts.nonexistentprompt)
+    except ValueError:
+        pass
+
 def test_json_prompts(test_folder_location):
     base_prompts = JsonPrompts(prompt_file=os.path.join(test_folder_location, 'test_prompts', 'test.json'))
     assert base_prompts('test') == 'this is a test'

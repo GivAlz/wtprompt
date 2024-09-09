@@ -11,6 +11,7 @@ from text files. Say goodbye to length issues and linting headaches.
 - ✅ **Jinja syntax**: Leverage the powerful Jinja syntax, already used by *haystack* and other libraries.
 - ✅ **Markdown-friendly**: OpenAI is popularizing Markdown as a prompt language; *wtprompt* is ready for that!
 - ✅ **Easy PromptManagement**:  Instantly load prompts from a directory (and its subdirectories) or a JSON file.
+- ✅ **Prompt hashing**: Track and manage your prompts by assigning unique hash identifiers.
 - ✅ **Dynamic Prompts**: Seamlessly insert text into your prompts at runtime.
 - ✅ **Built-in Preprocessing** Access straightforward, ready-to-use preprocessing for your text.
 
@@ -35,11 +36,13 @@ from wtprompt import FolderPrompts
 my_prompts = FolderPrompts(prompt_folder='folder_path')
 
 # The following commands will retrieve your prompt as a string variable:
-prompt = my_prompts.prompt_name
-# Note, nested calls like `my_prompts.subfolder.prompt_name` won't work!
-
 prompt = my_prompts('prompt_name')
 prompt = my_prompts('subfolder/prompt_name')
+
+# Note: the following are valid, but will throw an error only later if
+# the prompt path is wrong.
+prompt = my_prompts.prompt_name
+prompt = my_prompts.subfolder.prompt_name
 ```
 
 Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded as `hello`.
@@ -47,6 +50,29 @@ Where the prompt name is given by the file name, e.g., `hello.txt` can be loaded
 Remark:
 
 Folder-based loading is lazy: call the `.load()` method to load the whole folder structure.
+
+#### Saving and Loading
+
+Prompts are loaded in a lazy fashion. It is possible to save a report on the loaded
+prompts which contains their hashes and names:
+
+
+```python
+my_prompts.save_prompt_report("prompt_report_file")
+```
+
+This saves the prompt report to the file `prompt_report_file.json`. If `my_prompt` is of type FolderPrompts
+it is then possible to load the prompts in the following manner:
+
+```python
+from wtprompt import FolderPrompts
+
+my_prompts = FolderPrompts(prompt_folder='folder_path')
+my_prompts.load_from_prompt_report("path/to/report_file", strict=True)
+```
+
+If `strict=True` the function will throw an error if the hashes do not correspond to the ones
+saved.
 
 ### JSON-Based Prompt Loading
 
@@ -67,7 +93,6 @@ my_prompts = JsonPrompts(prompt_file='path_to_json.json')
 my_prompts.prompt_name
 my_prompts('prompt_name')
 ```
-
 
 Remark:
 
@@ -91,6 +116,12 @@ my_prompts.add_prompt(prompt_name, prompt_text)
 ```
 
 where prompt_name and prompt_text are string variables.
+
+A prompt is stored internally with a has, that can be retrieved as follows:
+
+```python
+promp_text, prompt_hash = my_prompts.get_prompt(prompt_name, get_hash=True)
+```
 
 ## Fill in Values
 

@@ -103,23 +103,39 @@ class FolderPrompts(PromptLoader):
         super().__init__(**data)
         self._pre_prompt = ''
 
+    def __str__(self):
+        if self._pre_prompt:
+            raise ValueError(f"ERROR: self._pre_prompt must be empty but has value {self._pre_prompt}\n"
+                             f"This is likely caused by using the '.' operator to extract a prompt which silently"
+                             f"failed.")
+        return super().__str__()
+
     @field_validator('prompt_folder')
     def validate_folder(cls, dirname):
         if not os.path.isdir(dirname) and not dirname == '':
             raise ValueError(f"The provided path '{dirname}' is not a valid directory.")
         return dirname
 
-    def load_from_prompt_report(self, outfile: str):
-        outfile =  pathlib.Path(outfile).with_suffix('.json')
-        with open(outfile, 'r') as f:
+    def load_from_prompt_report(self, prompt_report: str, strict: bool=True):
+        """Loads the prompt listed in the prompt_report.
+
+        :param prompt_report: file containing the prompt_report
+        :param strict: (Optional) if set to True (default) it will throw an error whenever the has is different
+            from the saved one.
+
+        """
+        prompt_report =  pathlib.Path(prompt_report).with_suffix('.json')
+        with open(prompt_report, 'r') as f:
             prompt_hashes = json.load(f)
 
         for prompt_name, prompt_hash in prompt_hashes.items():
-            prompt_text = self._get_prompt_text(prompt_name)
-            computed_hash = self._prompt_hashes[prompt_name]
-            if computed_hash != prompt_hash:
-                warnings.showwarning(f"Prompt {prompt_name} has different has!\n"
-                                     f"Expected hash: {prompt_hash}\nLoaded hash: {computed_hash}", Warning)
+            _ = self._get_prompt_text(prompt_name)
+            if strict:
+                computed_hash = self._prompt_hashes[prompt_name]
+                if computed_hash != prompt_hash:
+                    message = ("Prompt {prompt_name} has different has!\n"
+                               "Expected hash: {prompt_hash}\nLoaded hash: {computed_hash}")
+                    raise ValueError(message)
 
 
     def _temp_prompt_folder(self, prompt_folder: str):
