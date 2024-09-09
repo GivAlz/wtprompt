@@ -30,7 +30,7 @@ def test_folder_prompts(test_folder_location):
 
         new_base_prompts = FolderPrompts(prompt_folder=test_folder)
         new_base_prompts.load_from_prompt_report(temp_file.name)
-        loaded_keys = new_base_prompts.get_prompts().keys()
+        loaded_keys = new_base_prompts._prompts.keys()
         assert 'hello' in loaded_keys and 'test' in loaded_keys
         assert 'subfolder/nested'in loaded_keys
 

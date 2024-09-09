@@ -6,7 +6,7 @@ import os
 import pathlib
 import warnings
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -20,30 +20,43 @@ class PromptLoader(BaseModel):
         # Loading using pydantic validators
         super().__init__(**data)
         self._prompts = {}
+        self._prompt_hashes = {}
 
     def add_prompt(self, prompt_name: str, prompt_text: str):
+        """Add a single prompt, with prompt_name and prompt_text.
+
+        This function stores the prompt and its hash inside the calss.
+        """
         if prompt_name in self._prompts:
             warnings.showwarning(f"Prompt {prompt_name} already present.\n"
                                  f"Please check the prompt names!\nAdding nothing.", Warning)
             return
         self._prompts[prompt_name] = prompt_text
+        # Computing and storing hash
+        computed_hash = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+        self._prompt_hashes[prompt_name] = computed_hash
 
     def _get_prompt_text(self, prompt_name: str):
         return self._prompts[prompt_name]
 
-    def get_prompts(self):
-        return self._prompts
+    def get_prompt(self, prompt_name: str, get_hash: bool=False) -> Union[str, Tuple[str, str]]:
+        """Get a single prompt and, optionally, its hash.
+
+        :param prompt_name: name of the prompt to be retrieved
+        :param get_hash: it True, returns a tuple where the 2nd element is the hash.
+        """
+        if get_hash:
+            return self._prompts[prompt_name], self._prompt_hashes[prompt_name]
+        return self._prompts[prompt_name]
 
     def save_prompt_report(self, outfile: str):
-        # Hashing prompts
-        prompt_hashes = {}
-        for key, prompt in self._prompts.items():
-            prompt_hashes[key] = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+        """Saving hashes to outfile.
 
-        # Saving report
+        This is useful for prompt versioning.
+        """
         outfile = pathlib.Path(outfile).with_suffix('.json')
         with open(outfile, 'w') as f:
-            json.dump(prompt_hashes, f)
+            json.dump(self._prompt_hashes, f)
 
     def __getattr__(self, prompt_name: str) -> str:
         """Access prompt content via attribute-style access.
@@ -103,7 +116,7 @@ class FolderPrompts(PromptLoader):
 
         for prompt_name, prompt_hash in prompt_hashes.items():
             prompt_text = self._get_prompt_text(prompt_name)
-            computed_hash = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            computed_hash = self._prompt_hashes[prompt_name]
             if computed_hash != prompt_hash:
                 warnings.showwarning(f"Prompt {prompt_name} has different has!\n"
                                      f"Expected hash: {prompt_hash}\nLoaded hash: {computed_hash}", Warning)
@@ -148,7 +161,8 @@ class FolderPrompts(PromptLoader):
         prompt_text = self._load_prompt_from_file(prompt_name)
         if prompt_name is None:
             raise FileNotFoundError(f"No .txt or .md file found for '{prompt_name}'. Can't load the prompt!")
-        self._prompts[prompt_name] = prompt_text
+        self.add_prompt(prompt_name=prompt_name,
+                        prompt_text=prompt_text)
         return prompt_text
 
     def _load_prompt_from_file(self, prompt_name: str) -> str:
@@ -178,7 +192,8 @@ class FolderPrompts(PromptLoader):
             elif item.endswith('.txt') or item.endswith('.md'):
                 with open(item_path, 'r', encoding='utf-8') as file:
                     prompt_name = os.path.relpath(item_path, self.prompt_folder)
-                    self._prompts[prompt_name] = file.read()
+                    self.add_prompt(prompt_name=prompt_name,
+                                    prompt_text=file.read())
 
 class JsonPrompts(PromptLoader):
     """Load prompts from a json file.
@@ -204,4 +219,7 @@ class JsonPrompts(PromptLoader):
             return
         """Loads the json into the prompts dictionary."""
         with open(self.prompt_file, 'r', encoding='utf-8') as file:
-            self._prompts = json.load(file)
+            prompts = json.load(file)
+            for prompt_name, prompt_text in prompts.items():
+                self.add_prompt(prompt_name=prompt_name,
+                                prompt_text=prompt_text)
