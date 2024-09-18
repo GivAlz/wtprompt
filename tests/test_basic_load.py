@@ -1,5 +1,6 @@
 import os.path
 
+import tempfile
 import pytest
 
 from wtprompt import FolderPrompts, JsonPrompts, PromptLoader
@@ -11,7 +12,8 @@ def test_prompt_loader():
     assert prompt_loader('test') == 'content'
 
 def test_folder_prompts(test_folder_location):
-    base_prompts = FolderPrompts(prompt_folder=os.path.join(test_folder_location, 'test_prompts'))
+    test_folder = os.path.join(test_folder_location, 'test_prompts')
+    base_prompts = FolderPrompts(prompt_folder=test_folder)
     # lazy load -> the second time it uses the cached version
     for i in range(2):
         assert base_prompts('hello') == 'Say hello!'
@@ -21,6 +23,22 @@ def test_folder_prompts(test_folder_location):
 
         # assert base_prompts.subfolder.nested == 'This is a nested prompt.' # Currently not working
         assert base_prompts('subfolder/nested') == 'This is a nested prompt.'
+        assert base_prompts.subfolder.nested == base_prompts('subfolder/nested')
+
+    with tempfile.NamedTemporaryFile() as temp_file:
+        base_prompts.save_prompt_report(temp_file.name)
+
+        new_base_prompts = FolderPrompts(prompt_folder=test_folder)
+        new_base_prompts.load_from_prompt_report(temp_file.name)
+        loaded_keys = new_base_prompts._prompts.keys()
+        assert 'hello' in loaded_keys and 'test' in loaded_keys
+        assert 'subfolder/nested'in loaded_keys
+
+    try:
+        print(base_prompts.nonexistentprompt)
+    except ValueError:
+        pass
+    assert base_prompts.get_prompt_with_hash('hello')[0] == base_prompts.get_prompt('hello')
 
 def test_json_prompts(test_folder_location):
     base_prompts = JsonPrompts(prompt_file=os.path.join(test_folder_location, 'test_prompts', 'test.json'))
