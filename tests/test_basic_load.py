@@ -38,6 +38,7 @@ def test_folder_prompts(test_folder_location):
         print(base_prompts.nonexistentprompt)
     except ValueError:
         pass
+    assert base_prompts.get_prompt_with_hash('hello')[0] == base_prompts.get_prompt('hello')
 
 def test_json_prompts(test_folder_location):
     base_prompts = JsonPrompts(prompt_file=os.path.join(test_folder_location, 'test_prompts', 'test.json'))

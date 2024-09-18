@@ -39,14 +39,18 @@ class PromptLoader(BaseModel):
     def _get_prompt_text(self, prompt_name: str):
         return self._prompts[prompt_name]
 
-    def get_prompt(self, prompt_name: str, get_hash: bool=False) -> Union[str, Tuple[str, str]]:
+    def get_prompt_with_hash(self, prompt_name: str) -> Tuple[str, str]:
+        """Get a single prompt and its hash.
+
+        :param prompt_name: name of the prompt to be retrieved
+        """
+        return self._prompts[prompt_name], self._prompt_hashes[prompt_name]
+
+    def get_prompt(self, prompt_name: str) -> str:
         """Get a single prompt and, optionally, its hash.
 
         :param prompt_name: name of the prompt to be retrieved
-        :param get_hash: it True, returns a tuple where the 2nd element is the hash.
         """
-        if get_hash:
-            return self._prompts[prompt_name], self._prompt_hashes[prompt_name]
         return self._prompts[prompt_name]
 
     def save_prompt_report(self, outfile: str):
@@ -133,7 +137,7 @@ class FolderPrompts(PromptLoader):
             if strict:
                 computed_hash = self._prompt_hashes[prompt_name]
                 if computed_hash != prompt_hash:
-                    message = ("Prompt {prompt_name} has different has!\n"
+                    message = ("Prompt {prompt_name} has different hash!\n"
                                "Expected hash: {prompt_hash}\nLoaded hash: {computed_hash}")
                     raise ValueError(message)
 
