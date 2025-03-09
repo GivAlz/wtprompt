@@ -15,6 +15,23 @@ Tired of cluttering your code with blocks of text? *wtprompt* keeps your code cl
 
 ---
 
+### **What's New in v0.1.2**  
+
+- 🚀 **Simplified Prompt Filling**: You can now use `fill_prompt` directly with `FolderPrompts`:  
+  ```python
+  base_prompts.fill_prompt('fill_test', {'day': 'Monday', 'this_month': 'August'})
+  ```  
+
+- ⚠ **Breaking Change**:  
+  `fill_list` and `PromptGenerator` are **no longer accessible at the top level** (`wtprompt`).  
+  Update your imports as follows:  
+  ```python
+  from wtprompt.fill import fill_list, PromptGenerator
+  ```
+  or drop them in favour of the simplified filling method.
+
+---
+
 ## 🛠 Installation
 
 ```bash
