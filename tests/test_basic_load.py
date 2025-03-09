@@ -3,8 +3,7 @@ import os.path
 import tempfile
 import pytest
 
-from wtprompt import FolderPrompts, JsonPrompts, PromptLoader
-from wtprompt import PromptGenerator, fill_list
+from wtprompt import FolderPrompts, JsonPrompts, PromptLoader, PromptGenerator, fill_list
 
 def test_prompt_loader():
     prompt_loader = PromptLoader()
@@ -34,10 +33,9 @@ def test_folder_prompts(test_folder_location):
         assert 'hello' in loaded_keys and 'test' in loaded_keys
         assert 'subfolder/nested'in loaded_keys
 
-    try:
+    with pytest.raises(ValueError):
         print(base_prompts.nonexistentprompt)
-    except ValueError:
-        pass
+        
     assert base_prompts.get_prompt_with_hash('hello')[0] == base_prompts.get_prompt('hello')
 
 def test_json_prompts(test_folder_location):

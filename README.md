@@ -168,6 +168,8 @@ Answer the following question
 it is possible to make the proper substitutions in one of the following ways:
 
 ```python
+from wtprompt import PromptGenerator
+
 p_gen = PromptGenerator()
 # Using a dictionary to make the substitutions
 filled_in_prompt = p_gen.fill_prompt(wtprompt.prompt_name, {'question': '...question here...',
