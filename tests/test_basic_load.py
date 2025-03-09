@@ -28,7 +28,7 @@ def test_folder_prompts(test_folder_location):
     with tempfile.NamedTemporaryFile() as temp_file:
         base_prompts.save_prompt_report(temp_file.name)
 
-        new_base_prompts = FolderPrompts(prompt_folder=test_folder)
+        new_base_prompts = FolderPrompts(test_folder)
         new_base_prompts.load_from_prompt_report(temp_file.name)
         loaded_keys = new_base_prompts._prompts.keys()
         assert 'hello' in loaded_keys and 'test' in loaded_keys
@@ -80,7 +80,3 @@ def test_loading_errors():
         base_prompts = FolderPrompts(prompt_folder=prompt_folder)
 
     print("AssertionError correctly raised for non-existent file/directory.")
-
-    base_prompts = FolderPrompts()
-    base_prompts = JsonPrompts()
-    print("Created empty prompt classes!")

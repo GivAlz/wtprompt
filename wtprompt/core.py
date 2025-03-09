@@ -10,7 +10,7 @@ from typing import Optional, Union, Tuple, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
 
-from wtprompt.utils.json_validator import validate_json
+from wtprompt.utils.json_validator import is_json_valid
 
 from wtprompt.fill import PromptGenerator, fill_list
 
@@ -135,9 +135,9 @@ class FolderPrompts(PromptLoader):
     """
     prompt_folder: str = Field('', description="The folder containing .txt and .md files.")
 
-    def __init__(self, **data):
+    def __init__(self, prompt_folder:str):
         # Loading using pydantic validators
-        super().__init__(**data)
+        super().__init__(prompt_folder=prompt_folder)
         self._pre_prompt = ''
 
     def __str__(self):
@@ -265,10 +265,10 @@ class JsonPrompts(PromptLoader):
     prompt_file: str = Field('', description="The .json file containing the prompts.")
     validate_json: bool = Field(False, description="If True evaluates the JSON before loading it.")
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def __init__(self, prompt_file, validate_json=False):
+        super().__init__(prompt_file=prompt_file, validate_json=validate_json)
         if self.validate_json:
-            validate_json(self.prompt_file)
+            is_json_valid(self.prompt_file)
         # No support for lazy loading for json
         self.load()
 
