@@ -3,7 +3,8 @@ import os.path
 import tempfile
 import pytest
 
-from wtprompt import FolderPrompts, JsonPrompts, PromptLoader, PromptGenerator, fill_list
+from wtprompt import FolderPrompts, JsonPrompts, PromptLoader
+from wtprompt.fill import PromptGenerator, fill_list
 
 def test_prompt_loader():
     prompt_loader = PromptLoader()
@@ -65,6 +66,8 @@ def test_prompts_simplified_fill(test_folder_location):
 
     assert base_prompts.fill_prompt('fill_test', {'day': 'Monday', 'this_month': 'August'}) == target_str
     assert base_prompts.fill_prompt('fill_test', {'this_month': 'August', 'day': 'Monday'}) == target_str
+
+    assert base_prompts.fill_list('fill_test', ['Monday', 'August']) == target_str
 
 def test_loading_errors():
     prompt_file = 'non_existent.json'

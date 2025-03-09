@@ -6,29 +6,25 @@ import os
 import pathlib
 import warnings
 
-from typing import Optional, Union, Tuple, Dict
+from typing import Optional, Union, Tuple, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
 
 from wtprompt.utils.json_validator import validate_json
 
+from wtprompt.fill import PromptGenerator, fill_list
 
 class PromptLoader(BaseModel):
     """Base class to manage prompt loading.
     """
 
-    def __init__(self, prompt_generator=None, **data):
+    def __init__(self, **data):
         # Loading using pydantic validators
         super().__init__(**data)
         self._prompts = {}
         self._prompt_hashes = {}
 
-        if prompt_generator is None:
-            # Only import if not provided
-            from wtprompt import PromptGenerator
-            self._p_gen = PromptGenerator()
-        else:
-            self._p_gen = prompt_generator
+        self._p_gen = PromptGenerator()
 
     def add_prompt(self, prompt_name: str, prompt_text: str):
         """Add a single prompt, with prompt_name and prompt_text.
@@ -76,6 +72,18 @@ class PromptLoader(BaseModel):
         :return: prompt text with the substituted key/values.
         """
         return self._p_gen.fill_prompt(self.get_prompt(prompt_name), fillers)
+
+    def fill_list(self, prompt_name, values: List[str]) -> str:
+        """Basic function to fill a prompt.
+
+        Given a prompt with a list of placeholders in the form {{}} or {{name}} replaces them in order using values from
+        the values list.
+
+        Remark: the substitution function ignores variable names and substitutes matches in order.
+
+        It expects to find the same number of placeholders and values.
+        """
+        return fill_list(self.get_prompt(prompt_name), values)
 
 
     def save_prompt_report(self, outfile: str):
@@ -149,7 +157,7 @@ class FolderPrompts(PromptLoader):
         """Loads the prompt listed in the prompt_report.
 
         :param prompt_report: file containing the prompt_report
-        :param strict: (Optional) if set to True (default) it will throw an error whenever the has is different
+        :param strict: (Optional) if set to True (default) it will throw an error whenever the prompt is different
             from the saved one.
 
         """
@@ -181,23 +189,30 @@ class FolderPrompts(PromptLoader):
 
                 prompt_class_instance.hello
 
-        :param name (str): The name of the prompt to access.
+        :param prompt_name (str): The name of the prompt to access.
 
         :returns: The content of the prompt if it exists, otherwise throws an attribute error.
         """
-        prompt_name = os.path.join(self._pre_prompt, prompt_name)
-        # Trying to load the prompt from memory or from file
-        prompt_text = self._prompts.get(prompt_name)
-        if prompt_text is None:
-            prompt_text = self._load_prompt_from_file(prompt_name)
+        prompt_path = os.path.join(self._pre_prompt, prompt_name)
 
-        if isinstance(prompt_text, str):
+        # First, check if the prompt exists in memory
+        if prompt_path in self._prompts:
+            return self._prompts[prompt_path]
+
+        # If not found, try loading it from a file
+        prompt_text = self._load_prompt_from_file(prompt_path)
+        if prompt_text is not None:
             self._temp_prompt_folder('')
             return prompt_text
-        # Last possibility: this is a folder
-        self._temp_prompt_folder(prompt_name)
-        # TODO: This approach is buggy as, if a text is not found, it will end up returning a FolderPrompts object
-        return self
+
+        # Check if it's a valid directory before returning self
+        full_folder_path = os.path.join(self.prompt_folder, prompt_path)
+        if os.path.isdir(full_folder_path):
+            self._temp_prompt_folder(prompt_path)
+            return self
+
+        # If neither a valid prompt nor a folder, raise an error
+        raise AttributeError(f"No prompt or valid folder found for '{prompt_name}'.")
 
     def _get_prompt_text(self, prompt_name: str):
         if prompt_name in self._prompts:
