@@ -7,7 +7,7 @@ class ValidationError(Exception):
     pass
 
 
-def validate_json(filepath: str) -> bool:
+def is_json_valid(filepath: str) -> bool:
     """
     Validates a JSON file to ensure it exists, is a valid JSON,
     and that its content is a dictionary where values are either
