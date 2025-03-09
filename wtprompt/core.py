@@ -208,11 +208,11 @@ class FolderPrompts(PromptLoader):
         # Check if it's a valid directory before returning self
         full_folder_path = os.path.join(self.prompt_folder, prompt_path)
         if os.path.isdir(full_folder_path):
-            self._temp_prompt_folder(prompt_path)
+            self._temp_prompt_folder(full_folder_path)
             return self
 
         # If neither a valid prompt nor a folder, raise an error
-        raise AttributeError(f"No prompt or valid folder found for '{prompt_name}'.")
+        raise ValueError(f"No prompt or valid folder found for '{prompt_name}'.")
 
     def _get_prompt_text(self, prompt_name: str):
         if prompt_name in self._prompts:
