@@ -6,7 +6,7 @@ import os
 import pathlib
 import warnings
 
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, Dict
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -16,11 +16,19 @@ from wtprompt.utils.json_validator import validate_json
 class PromptLoader(BaseModel):
     """Base class to manage prompt loading.
     """
-    def __init__(self, **data):
+
+    def __init__(self, prompt_generator=None, **data):
         # Loading using pydantic validators
         super().__init__(**data)
         self._prompts = {}
         self._prompt_hashes = {}
+
+        if prompt_generator is None:
+            # Only import if not provided
+            from wtprompt import PromptGenerator
+            self._p_gen = PromptGenerator()
+        else:
+            self._p_gen = prompt_generator
 
     def add_prompt(self, prompt_name: str, prompt_text: str):
         """Add a single prompt, with prompt_name and prompt_text.
@@ -44,6 +52,8 @@ class PromptLoader(BaseModel):
 
         :param prompt_name: name of the prompt to be retrieved
         """
+        if not prompt_name in self._prompts:
+            _ = self._get_prompt_text(prompt_name)
         return self._prompts[prompt_name], self._prompt_hashes[prompt_name]
 
     def get_prompt(self, prompt_name: str) -> str:
@@ -51,7 +61,22 @@ class PromptLoader(BaseModel):
 
         :param prompt_name: name of the prompt to be retrieved
         """
-        return self._prompts[prompt_name]
+        return self._get_prompt_text(prompt_name)
+
+    def fill_prompt(self, prompt_name, fillers: Dict[str, str]) -> str:
+        """Fill a prompt from the clss.
+
+        The prompt should be formatted using Jinja syntax. For details see the PromptGenerator class.
+
+
+        REMARK: the name for the keys can contain only the chars matched by the regex: [a-zA-z0-9_]
+
+        :param prompt_name: The text of the prompt
+        :param fillers: Dictionary with arguments to be used to fill the prompt
+        :return: prompt text with the substituted key/values.
+        """
+        return self._p_gen.fill_prompt(self.get_prompt(prompt_name), fillers)
+
 
     def save_prompt_report(self, outfile: str):
         """Saving hashes to outfile.
@@ -179,7 +204,7 @@ class FolderPrompts(PromptLoader):
             return self._prompts[prompt_name]
         # Prompt not found: loading it
         prompt_text = self._load_prompt_from_file(prompt_name)
-        if prompt_name is None:
+        if prompt_text is None:
             raise FileNotFoundError(f"No .txt or .md file found for '{prompt_name}'. Can't load the prompt!")
         self.add_prompt(prompt_name=prompt_name,
                         prompt_text=prompt_text)
@@ -194,8 +219,6 @@ class FolderPrompts(PromptLoader):
             if os.path.isfile(file_path):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     return file.read().strip()
-
-        return None
 
     def load(self):
         """Loads .txt and .md files from the folder into the prompts dictionary."""
